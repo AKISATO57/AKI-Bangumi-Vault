@@ -4,6 +4,10 @@
 
 > 本项目是独立第三方工具，不隶属于 Bangumi，也不代表 Bangumi 官方。
 
+<img width="2468" height="1466" alt="界面1" src="https://github.com/user-attachments/assets/124161de-a6ad-4f16-8b98-d03b39ca6ab1" />
+<img width="2468" height="1534" alt="界面2" src="https://github.com/user-attachments/assets/f9881869-4f98-412c-bcba-722a85cf9587" />
+UI我还是挺满意的（确信
+
 ## 下载与使用
 
 ### 推荐：Windows 安装版
