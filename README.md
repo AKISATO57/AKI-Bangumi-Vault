@@ -14,7 +14,7 @@ UI我还是挺满意的（确信
 
 普通用户建议在 GitHub Releases 下载：
 
-- `Bangumi-Vault-0.28.0-win-x64.exe`
+- `Bangumi-Vault-0.29.0-win-x64.exe`
 
 这是已经编译完成的 Windows 安装版，双击安装即可使用。
 
@@ -22,7 +22,7 @@ UI我还是挺满意的（确信
 
 有能力修改、二次开发或自行打包的用户，可以下载源码压缩包：
 
-- `Bangumi-Vault-v0.28.0-source.zip`
+- `Bangumi-Vault-v0.29.0-source.zip`
 
 源码版需要先安装 Node.js LTS，然后运行：
 
@@ -62,6 +62,9 @@ https://akibangumibackup.netlify.app
 ## 功能
 
 - 同步 Bangumi 收藏条目；
+- 区分备份「我的标签」和条目「公共标签」；
+- 支持点击标签在本地筛选，公共标签可跳转到 Bangumi 标签页；
+- 支持为当前筛选结果补全公共标签；
 - 本地保存收藏数据到 `资料库/收藏数据.json`；
 - 本地缓存封面到 `资料库/封面缓存/`；
 - 支持导入、导出和完整备份；
@@ -124,9 +127,9 @@ npm run check
 
 每次发布建议同时上传：
 
-1. Windows 安装版：`Bangumi-Vault-0.28.0-win-x64.exe`  
+1. Windows 安装版：`Bangumi-Vault-0.29.0-win-x64.exe`  
    推荐普通用户下载。
-2. 源码压缩包：`Bangumi-Vault-v0.28.0-source.zip`  
+2. 源码压缩包：`Bangumi-Vault-v0.29.0-source.zip`  
    给开发者或想自行修改的人使用。
 3. Release notes：说明桌面版、源码版、在线版的差异。
 

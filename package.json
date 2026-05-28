@@ -1,6 +1,6 @@
 {
   "name": "bangumi-vault",
-  "version": "0.28.0",
+  "version": "0.29.4",
   "description": "Bangumi 保管库：本地优先的 Bangumi 收藏备份桌面应用。",
   "main": "main.js",
   "private": true,
@@ -88,10 +88,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/AKISATO57/bangumi-vault.git"
+    "url": "https://github.com/AKISATO57/AKI-Bangumi-Vault.git"
   },
   "homepage": "https://akibangumibackup.netlify.app",
   "bugs": {
-    "url": "https://github.com/AKISATO57/bangumi-vault/issues"
+    "url": "https://github.com/AKISATO57/AKI-Bangumi-Vault/issues"
   }
 }

@@ -910,7 +910,8 @@
     const q = encodeURIComponent(name || '');
     return path === 'subject_search' ? `https://bgm.tv/subject_search/${q}?cat=all` : `https://bgm.tv/${path}/tag/${q}`;
   }
-  function publicTagsForDisplay(c){ return publicTagsOf(c); }
+  const PUBLIC_TAG_DISPLAY_LIMIT = 24;
+  function publicTagsForDisplay(c){ return publicTagsOf(c).slice(0, PUBLIC_TAG_DISPLAY_LIMIT); }
   function shortValue(v, max=80){
     const t = Array.isArray(v) ? v.join(' / ') : String(v ?? '');
     return t.length > max ? t.slice(0, max) + '…' : t;
@@ -926,7 +927,7 @@
       ['private','私密状态', v => v ? '私密' : '公开'],
       ['tags','我的标签', v => shortValue(normalizeTags(v), 120)],
       ['publicTags','公共标签', v => shortValue(normalizePublicTags(v).map(x=>x.count ? `${x.name}(${x.count})` : x.name), 120)],
-      ['bangumi_updated_at','API 更新时间', v => formatDate(v) || '-'],
+      ['bangumi_updated_at','Bangumi 记录更新时间', v => formatDate(v) || '-'],
       ['title','标题', v => v || '-'],
       ['date','上映日期', v => v || '-'],
       ['bgm_score','Bangumi 均分', v => formatScoreValue(v) || '-'],
@@ -1140,7 +1141,7 @@
     const publicTagsHtml = publicTagsShown.length ? publicTagsShown.map(t=>`<button class="tag-chip tag-filter-btn public-tag" data-tag-key="${esc(tagKey('public', t.name))}"><span class="tag-kind">公共</span>${esc(t.name)}${t.count?` · ${esc(t.count)}`:''}</button><a class="tag-open" href="${esc(bgmTagUrl(c.subject_type, t.name))}" target="_blank" rel="noopener" title="打开 Bangumi 标签页">↗</a>`).join(' ') : '<span class="muted-inline">未缓存。可点“刷新公共标签”。</span>';
     const hiddenPublicTags = Math.max(0, publicTags.length - publicTagsShown.length);
     const publicTagsNote = publicTags.length
-      ? `已缓存 ${publicTags.length} 个公共标签${c.public_tags_source === 'website' ? '。来源：Bangumi 条目页“大家将…标注为”区域' : '。来源：API ，可能与官网标签区不完全一致'}${c.public_tags_fetched_at ? '。刷新于 ' + esc(formatDate(c.public_tags_fetched_at)) : '。可点“刷新公共标签”重取。'}`
+      ? `已缓存 ${publicTags.length} 个公共标签，当前显示前 ${publicTagsShown.length} 个${hiddenPublicTags ? '，其余 ' + hiddenPublicTags + ' 个低频标签仅保存在备份/导出中' : ''}${c.public_tags_fetched_at ? '。刷新于 ' + esc(formatDate(c.public_tags_fetched_at)) : '。列表接口自带标签可能不完整，建议点“刷新公共标签”重取。'}`
       : '公共标签来自 Bangumi 条目公开信息；在线版/网络异常时可能无法补全。';
 
     const actions = `${c.status==='missing_candidate'?`<button class="btn good small wide" id="keepLocalBtn">本地保留</button><button class="btn bad small wide" id="confirmDeleteBtn">确认线上删除</button>`:''}${c.status==='confirmed_deleted'?`<button class="btn good small wide" id="restoreBtn">恢复显示</button>`:''}`;
@@ -1167,7 +1168,7 @@
               ${c.summary?`<div class="info-card"><h3>条目简介</h3><div class="longtext">${esc(c.summary)}</div></div>`:''}
             </div>
             <div class="detail-stack">
-              <div class="info-card"><h3>资料库信息</h3><div class="kv"><div>条目 ID</div><div>${esc(c.subject_id||'-')}</div><div>原名</div><div>${esc(c.name||'-')}</div><div>中文名</div><div>${esc(c.name_cn||'-')}</div><div>上映日期</div><div>${esc(c.date||'-')}</div><div>Bangumi均分</div><div>${esc(formatScoreValue(c.bgm_score || c.raw?.subject?.score || c.raw?.subject?.rating?.score) || '-')}</div><div>排名</div><div>${esc(c.rank || '-')}</div><div>进度</div><div>${esc([c.ep_status?`章节 ${c.ep_status}`:'',c.vol_status?`卷 ${c.vol_status}`:''].filter(Boolean).join(' / ') || '-')}</div><div>条目最后更新时间</div><div>${esc(formatDate(c.bangumi_updated_at)||'-')}</div><div>首次备份</div><div>${esc(formatDate(c.first_seen_at)||'-')}</div><div>本地同步</div><div>${esc(formatDate(c.last_synced_at || c.last_seen_at)||'-')}</div><div>状态</div><div>${esc(c.status||'active')}${c.missing_count?`，缺失次数 ${c.missing_count}`:''}</div></div></div>
+              <div class="info-card"><h3>资料库信息</h3><div class="kv"><div>条目 ID</div><div>${esc(c.subject_id||'-')}</div><div>原名</div><div>${esc(c.name||'-')}</div><div>中文名</div><div>${esc(c.name_cn||'-')}</div><div>上映日期</div><div>${esc(c.date||'-')}</div><div>Bangumi均分</div><div>${esc(formatScoreValue(c.bgm_score || c.raw?.subject?.score || c.raw?.subject?.rating?.score) || '-')}</div><div>排名</div><div>${esc(c.rank || '-')}</div><div>进度</div><div>${esc([c.ep_status?`章节 ${c.ep_status}`:'',c.vol_status?`卷 ${c.vol_status}`:''].filter(Boolean).join(' / ') || '-')}</div><div>Bangumi记录更新</div><div>${esc(formatDate(c.bangumi_updated_at)||'-')}</div><div>首次备份</div><div>${esc(formatDate(c.first_seen_at)||'-')}</div><div>本地同步</div><div>${esc(formatDate(c.last_synced_at || c.last_seen_at)||'-')}</div><div>状态</div><div>${esc(c.status||'active')}${c.missing_count?`，缺失次数 ${c.missing_count}`:''}</div></div></div>
               <div class="info-card"><h3>我的标签</h3><div class="tag-cloud">${myTagsHtml}</div></div>
               <div class="info-card"><h3>公共标签</h3><div class="tag-cloud">${publicTagsHtml}</div><p class="help" style="margin:10px 0 0">${publicTagsNote}<br>点击标签在本地筛选；点 ↗ 打开 Bangumi 对应标签页。</p></div>
               <div class="info-card"><h3>备份历史</h3><div class="history-list">${hist.length?hist.map(h=>`<div class="hist"><b>${esc(h.change_type)}</b> · ${esc(formatDate(h.created_at))}<br>${historyChangeHtml(h)}</div>`).join(''):'<div class="hist">还没有历史变更。</div>'}</div></div>
@@ -1310,13 +1311,8 @@
   }
 
   async function fetchSubjectPublicTags(subjectId, token){
-    // 纯 API 获取公共标签，避免抓取 Bangumi 网页。
-    // 注意：API 返回的 tags 可能与网页“大家将...标注为”区域的展示数量和顺序略有差异。
     const js = await apiFetch(`/v0/subjects/${encodeURIComponent(subjectId)}`, token || '');
-    return {
-      tags: normalizePublicTags(js.tags || js.subject?.tags || []).sort((a,b)=>(Number(b.count)||0)-(Number(a.count)||0) || String(a.name).localeCompare(String(b.name),'zh-Hans-CN')),
-      source: 'api'
-    };
+    return normalizePublicTags(js.tags || js.subject?.tags || []).sort((a,b)=>(Number(b.count)||0)-(Number(a.count)||0) || String(a.name).localeCompare(String(b.name),'zh-Hans-CN'));
   }
   async function enrichPublicTagsCurrent(){
     const token = readToken();
@@ -1325,18 +1321,16 @@
     if(!confirm(`将为当前筛选下 ${arr.length} 个条目逐个刷新公共标签，并覆盖旧的公共标签缓存。条目较多时会比较慢，继续吗？`)) return;
     openModal('syncModal'); $('syncLog').textContent=''; setProgress(0);
     if($('syncTitle')) $('syncTitle').textContent = '刷新公共标签';
-    if($('syncHelp')) $('syncHelp').textContent = '公共标签来自 Bangumi API，不抓取官网网页；可能与网页标签区的展示数量和顺序略有差异。';
+    if($('syncHelp')) $('syncHelp').textContent = '公共标签来自 Bangumi 条目公开信息；这一步不会修改你的收藏状态，只刷新本地备份里的公共标签缓存。';
     let ok=0, empty=0, fail=0; const started_at=nowISO();
     for(let i=0;i<arr.length;i++){
       const c = arr[i]; setProgress((i+1)/arr.length*100);
       try{
-        const tagResult = await fetchSubjectPublicTags(c.subject_id, token);
-        const tags = Array.isArray(tagResult) ? tagResult : (tagResult.tags || []);
+        const tags = await fetchSubjectPublicTags(c.subject_id, token);
         const row = state.collections[String(c.subject_id)];
         if(row){
           const before = structuredClone(row);
           row.publicTags = tags;
-          row.public_tags_source = Array.isArray(tagResult) ? 'api' : (tagResult.source || 'api');
           row.public_tags_fetched_at = nowISO();
           row.content_hash = hashString(stableStringify(comparable(row)));
           const changes = collectionFieldDiff(before, row);
@@ -1347,8 +1341,8 @@
         else await sleep(120);
       }catch(e){ fail++; if(fail <= 8) log('syncLog',`失败 ${c.subject_id} ${c.title||''}：${e.message || e}`); await sleep(300); }
     }
-    state.history.push({change_type:'public_tags_enriched', created_at:started_at, new:{count:arr.length, ok, empty, fail}, note:'刷新 API 公共标签'});
-    await saveState(); resetRenderLimit(); render(); log('syncLog',`完成：有标签 ${ok}，空标签 ${empty}，失败 ${fail}`); toast(`公共标签刷新完成：${ok} 个条目有标签`);
+    state.history.push({change_type:'public_tags_enriched', created_at:started_at, new:{count:arr.length, ok, empty, fail}, note:'刷新条目公共标签'});
+    await saveState(); resetRenderLimit(); render(); log('syncLog',`完成：有标签 ${ok}，空标签 ${empty}，失败 ${fail}`); toast(`公共标签补全完成：${ok} 个条目有标签`);
   }
 
   async function cacheCoversCurrent(){
@@ -1421,7 +1415,7 @@
   function buildJson(){ return JSON.stringify({manifest:manifest(), state:safeExportState()}, null, 2); }
   function csvCell(s){ return '"' + String(s ?? '').replace(/"/g,'""') + '"'; }
   function buildCsv(){
-    const head=['subject_id','分类','状态','标题','原名','中文名','日期','我的评分','Bangumi均分','进度章节','进度卷','我的标签','公共标签','全部标签','吐槽/观后感','是否私密','条目最后更新时间','本地同步时间','本地状态','首次备份','最后确认存在'];
+    const head=['subject_id','分类','状态','标题','原名','中文名','日期','我的评分','Bangumi均分','进度章节','进度卷','我的标签','公共标签','全部标签','吐槽/观后感','是否私密','Bangumi记录更新','本地同步时间','本地状态','首次备份','最后确认存在'];
     const lines=[head.map(csvCell).join(',')];
     for(const c of getAllCollections()) lines.push([c.subject_id,SUBJECT_LABEL[c.subject_type]||c.subject_type,STATUS[c.collection_type]||c.collection_type,c.title,c.name,c.name_cn,c.date,c.rate,(formatScoreValue(c.bgm_score || c.raw?.subject?.score || c.raw?.subject?.rating?.score) || ''),c.ep_status,c.vol_status,myTagsOf(c).join(' / '),publicTagNames(c).join(' / '),allTagNames(c).join(' / '),c.comment,c.private?'是':'否',c.bangumi_updated_at,c.last_synced_at || c.last_seen_at || '',c.status,c.first_seen_at,c.last_seen_at].map(csvCell).join(','));
     return '\ufeff' + lines.join('\r\n');
@@ -1541,7 +1535,7 @@
       全部标签:allTagNames(c).join(' / '),
       吐槽观后感:c.comment||'',
       是否私密:c.private?'是':'否',
-      条目最后更新时间:c.bangumi_updated_at||'',
+      Bangumi记录更新:c.bangumi_updated_at||'',
       本地同步时间:c.last_synced_at || c.last_seen_at || '',
       本地状态:c.status||'active',
       首次备份:c.first_seen_at||'',
@@ -1592,7 +1586,7 @@
         是否私密: c.private ? '是' : '否',
         本地状态: c.status || 'active',
         是否安全箱: c.status === 'missing_candidate' ? '是' : '否',
-        条目最后更新时间: c.bangumi_updated_at || '',
+        Bangumi记录更新: c.bangumi_updated_at || '',
         本地同步时间: c.last_synced_at || c.last_seen_at || '',
         首次备份: c.first_seen_at || '',
         最后确认存在: c.last_seen_at || '',
@@ -1663,7 +1657,7 @@
   }
   function buildXlsxBlob(){
     const rich = exportRichRows();
-    const headers = ['序号','条目ID','条目链接','分类','状态','分类状态','年份','月份','季度','年月','上映日期','标题','中文名','原名','我的评分','我的评分档','Bangumi均分','Bangumi评分档','已看集数','总集数','进度百分比','进度档','进度卷','有吐槽','吐槽字数','主标签','标签数量','标签1','标签2','标签3','标签4','标签5','全部标签','我的标签','公共标签','吐槽观后感','是否私密','本地状态','是否安全箱','条目最后更新时间','首次备份','最后确认存在','封面文件','排序用更新时间'];
+    const headers = ['序号','条目ID','条目链接','分类','状态','分类状态','年份','月份','季度','年月','上映日期','标题','中文名','原名','我的评分','我的评分档','Bangumi均分','Bangumi评分档','已看集数','总集数','进度百分比','进度档','进度卷','有吐槽','吐槽字数','主标签','标签数量','标签1','标签2','标签3','标签4','标签5','全部标签','我的标签','公共标签','吐槽观后感','是否私密','本地状态','是否安全箱','Bangumi更新时间','首次备份','最后确认存在','封面文件','排序用更新时间'];
     const detailRows = [headers, ...rich.map(r=>headers.map(h=>r[h]))];
     const statusRows = [['分类','状态','数量','有吐槽','有评分','平均我的评分','平均Bangumi均分','安全箱数量']];
     const cats = [...new Set(rich.map(r=>r.分类))].sort(); const sts = [...new Set(rich.map(r=>r.状态))].sort();
@@ -1673,8 +1667,8 @@
     const tagRows = [['标签','数量','分类范围','状态范围','平均我的评分','平均Bangumi均分','示例条目']];
     [...tagMap.values()].sort((a,b)=>b.count-a.count || a.tag.localeCompare(b.tag)).forEach(o=>tagRows.push([o.tag,o.count,[...o.cats].join(' / '),[...o.sts].join(' / '),mean(o.scores),mean(o.bgm),o.examples.join(' / ')]));
     const commentRows = [['标题','分类','状态','我的评分','Bangumi均分','年份','标签','吐槽字数','吐槽/观后感','条目链接']];
-    rich.filter(r=>r.有吐槽==='是').sort((a,b)=>String(b.条目最后更新时间).localeCompare(String(a.条目最后更新时间))).forEach(r=>commentRows.push([r.标题,r.分类,r.状态,r.我的评分,r.Bangumi均分,r.年份,r.全部标签,r.吐槽字数,r.吐槽观后感,r.条目链接]));
-    const safetyRows = [['条目ID','标题','分类','状态','最后确认存在','条目最后更新时间','本地状态','吐槽/观后感','条目链接'], ...rich.filter(r=>r.是否安全箱==='是'||r.本地状态==='missing_candidate').map(r=>[r.条目ID,r.标题,r.分类,r.状态,r.最后确认存在,r.条目最后更新时间,r.本地状态,r.吐槽观后感,r.条目链接])];
+    rich.filter(r=>r.有吐槽==='是').sort((a,b)=>String(b.Bangumi更新时间).localeCompare(String(a.Bangumi更新时间))).forEach(r=>commentRows.push([r.标题,r.分类,r.状态,r.我的评分,r.Bangumi均分,r.年份,r.全部标签,r.吐槽字数,r.吐槽观后感,r.条目链接]));
+    const safetyRows = [['条目ID','标题','分类','状态','最后确认存在','Bangumi更新时间','本地状态','吐槽/观后感','条目链接'], ...rich.filter(r=>r.是否安全箱==='是'||r.本地状态==='missing_candidate').map(r=>[r.条目ID,r.标题,r.分类,r.状态,r.最后确认存在,r.Bangumi更新时间,r.本地状态,r.吐槽观后感,r.条目链接])];
     const summaryRows = [
       Object.assign(['Bangumi 保管库表格备份', '', '', '', '', '', ''], {__style:2, __height:28}),
       ['导出时间', nowISO(), '账号', state.settings.username||'', '总条目', rich.length, ''],

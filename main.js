@@ -211,7 +211,7 @@ function downloadBuffer(remoteUrl, redirectsLeft = 5) {
     const req = client.request(parsed, {
       method: 'GET',
       headers: {
-        'User-Agent': 'BangumiVault/0.28.0 (local image backup)',
+        'User-Agent': 'BangumiVault/0.29.3 (local image backup)',
         'Referer': 'https://bgm.tv/',
         'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8'
       },
@@ -239,6 +239,95 @@ function downloadBuffer(remoteUrl, redirectsLeft = 5) {
   });
 }
 
+
+function downloadText(remoteUrl, redirectsLeft = 5) {
+  return new Promise((resolve, reject) => {
+    let parsed;
+    try { parsed = new URL(remoteUrl); } catch (err) { reject(err); return; }
+    const client = parsed.protocol === 'https:' ? https : http;
+    const req = client.request(parsed, {
+      method: 'GET',
+      headers: {
+        'User-Agent': 'BangumiVault/0.29.3 (local subject tag backup)',
+        'Referer': 'https://bgm.tv/',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'zh-CN,zh;q=0.9,ja;q=0.8,en;q=0.6'
+      },
+      timeout: 30000
+    }, res => {
+      const status = res.statusCode || 0;
+      if ([301, 302, 303, 307, 308].includes(status) && res.headers.location && redirectsLeft > 0) {
+        res.resume();
+        const next = new URL(res.headers.location, parsed).toString();
+        downloadText(next, redirectsLeft - 1).then(resolve, reject);
+        return;
+      }
+      if (status < 200 || status >= 300) {
+        res.resume();
+        reject(new Error(`HTTP ${status}`));
+        return;
+      }
+      const chunks = [];
+      res.on('data', chunk => chunks.push(chunk));
+      res.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
+    });
+    req.on('timeout', () => req.destroy(new Error('Request timeout')));
+    req.on('error', reject);
+    req.end();
+  });
+}
+
+function decodeHtmlEntity(text) {
+  return String(text || '')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&apos;/g, "'")
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&')
+    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)))
+    .replace(/&#x([0-9a-fA-F]+);/g, (_, n) => String.fromCharCode(parseInt(n, 16)));
+}
+
+function stripTags(html) {
+  return decodeHtmlEntity(String(html || '').replace(/<script[\s\S]*?<\/script>/gi, '').replace(/<style[\s\S]*?<\/style>/gi, '').replace(/<[^>]+>/g, ' ')).replace(/\s+/g, ' ').trim();
+}
+
+function extractSubjectPageTags(html) {
+  const source = String(html || '');
+  let start = source.search(/大家将[\s\S]{0,600}?标注为/);
+  if (start < 0) start = source.search(/subject_tag_section|subject_tags|tagsWrapper/i);
+  if (start < 0) return [];
+  let segment = source.slice(start, start + 16000);
+  const next = segment.slice(200).search(/<h2\b|<h3\b|id=["']subjectPanelCollect|class=["'][^"']*subject_section/i);
+  if (next > 0) segment = segment.slice(0, 200 + next);
+  const tags = [];
+  const seen = new Set();
+  const re = /<a\b([^>]*?href=(['"])([^'"]*\/tag\/[^'"]*)\2[^>]*)>([\s\S]*?)<\/a>([\s\S]{0,120})/gi;
+  let match;
+  while ((match = re.exec(segment))) {
+    const href = decodeHtmlEntity(match[3] || '');
+    if (!/\/(anime|book|music|game|real|subject)\/tag\//.test(href) && !/\/tag\//.test(href)) continue;
+    let text = stripTags(match[4]);
+    if (!text || /更多|more/i.test(text)) continue;
+    let count = 0;
+    const insideCount = text.match(/^(.*?)[\s\(（]+(\d+)[\)）]?$/);
+    if (insideCount) {
+      text = insideCount[1].trim();
+      count = Number(insideCount[2]) || 0;
+    } else {
+      const tail = match[5] || '';
+      const tailCount = tail.match(/<(?:span|small)\b[^>]*?(?:class=(['"])[^'"]*(?:num|count)[^'"]*\1)?[^>]*>\s*(\d+)\s*<\/(?:span|small)>/i);
+      if (tailCount) count = Number(tailCount[2]) || 0;
+    }
+    text = text.replace(/\s+/g, ' ').trim();
+    if (!text || seen.has(text)) continue;
+    seen.add(text);
+    tags.push({ name: text, count });
+  }
+  return tags;
+}
+
 async function handleRequest(req, res) {
   const requestUrl = new URL(req.url, 'http://127.0.0.1');
   const pathname = decodeURIComponent(requestUrl.pathname);
@@ -259,6 +348,7 @@ async function handleRequest(req, res) {
     send(res, 200, JSON.stringify({ ok: true, desktop: true, dataDir }), 'application/json; charset=utf-8');
     return;
   }
+
 
   if (req.method === 'GET' && pathname === '/api/state') {
     try {
