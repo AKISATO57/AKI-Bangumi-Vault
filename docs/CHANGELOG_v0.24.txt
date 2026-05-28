@@ -1,0 +1,1 @@
+v0.24: 修复/优化 Excel 单独导出无反馈；单独导出 Word/Excel 增加进度窗口与错误日志；沿用 v0.23 的轻量 Word，避免完整 ZIP 卡在生成 Word/Excel 阶段。

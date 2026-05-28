@@ -1,0 +1,1 @@
+v0.23: 修复完整 ZIP 卡在 Word/Excel 生成阶段；Word 改为轻量目录版；导出进度拆成 7 步并显示 Excel/Word 大小。

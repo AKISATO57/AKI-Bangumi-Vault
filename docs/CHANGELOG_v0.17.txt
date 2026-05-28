@@ -1,0 +1,1 @@
+v0.17: Local PowerShell server, state.json storage, VaultData/Images cover cache, backups saved to VaultData/Backups, fixed CMD CRLF/ASCII launcher.

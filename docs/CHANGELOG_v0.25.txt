@@ -1,0 +1,8 @@
+Bangumi Vault Portable v0.25
+
+修复：
+- 修复导出 Excel / 完整 ZIP 过程中出现 “colName is not defined” 导致导出失败的问题。
+- 补回 XLSX 生成器使用的列名转换函数，支持 A-Z、AA、AB 等多列。
+
+使用：
+- 请重新启动 v0.25，再重新点击“导出表格 .xlsx”或“导出完整 ZIP”。

@@ -1,0 +1,7 @@
+Bangumi Vault Portable v0.20
+
+- 修复在线/便携运行模式下 base64 封面优先级过高导致在线海报可能不显示的问题。
+- Data URL 只在导出离线 HTML 时临时内嵌，不再写回 state.json。
+- 导出完整 ZIP 增加进度弹窗与步骤日志，避免长时间看起来无反应。
+- 完整 ZIP 仍会保存到 VaultData/Backups，并同时触发浏览器下载。
+- 离线 HTML 会内嵌已经缓存到 VaultData/Images 的封面；未缓存封面离线时显示占位。

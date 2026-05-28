@@ -1,0 +1,3 @@
+v0.19
+- 修复完整 ZIP 内 offline-poster-wall.html 点击海报打不开详情的问题。
+- 导出离线页时保留 #drawer / modal / toast 必要 DOM，只清理打开态。

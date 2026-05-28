@@ -1,0 +1,97 @@
+{
+  "name": "bangumi-vault",
+  "version": "0.28.0",
+  "description": "Bangumi 保管库：本地优先的 Bangumi 收藏备份桌面应用。",
+  "main": "main.js",
+  "private": true,
+  "author": "AKISATO",
+  "license": "MIT",
+  "scripts": {
+    "start": "node scripts/patch-electron-icon.js && node scripts/start-electron.js",
+    "dist:win": "electron-builder --win nsis portable",
+    "dist:win-portable": "electron-builder --win portable",
+    "dist:mac": "electron-builder --mac dmg",
+    "check": "node --check main.js && node --check preload.js"
+  },
+  "devDependencies": {
+    "electron": "31.7.7",
+    "electron-builder": "24.13.3",
+    "rcedit": "^5.0.0"
+  },
+  "build": {
+    "appId": "io.github.akisato.bangumi.vault",
+    "productName": "Bangumi 保管库",
+    "asar": true,
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "package.json",
+      "scripts/start-electron.js",
+      "scripts/patch-electron-icon.js"
+    ],
+    "extraResources": [
+      {
+        "from": "app",
+        "to": "app",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": "build",
+        "to": "build",
+        "filter": [
+          "icon.ico",
+          "icon.png",
+          "icon.svg"
+        ]
+      }
+    ],
+    "win": {
+      "icon": "build/icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Bangumi 保管库"
+    },
+    "portable": {
+      "artifactName": "Bangumi-Vault-${version}-win-portable.${ext}"
+    },
+    "mac": {
+      "category": "public.app-category.entertainment",
+      "target": [
+        "dmg"
+      ]
+    },
+    "artifactName": "Bangumi-Vault-${version}-${os}-${arch}.${ext}"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AKISATO57/bangumi-vault.git"
+  },
+  "homepage": "https://akibangumibackup.netlify.app",
+  "bugs": {
+    "url": "https://github.com/AKISATO57/bangumi-vault/issues"
+  }
+}

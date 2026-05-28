@@ -1,0 +1,4 @@
+v0.18
+- 修复完整 ZIP 中 offline-poster-wall.html 离线打开时封面不显示的问题。
+- 离线 HTML 现在内嵌缓存封面，同时 ZIP 继续保留 images/ 原图目录。
+- 离线详情页点击打开使用内嵌图片优先，避免 /images 路径失效。
