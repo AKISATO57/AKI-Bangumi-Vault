@@ -1303,6 +1303,42 @@
     }
     @media (max-width:1180px){#settingsModal .network-body-inner .settings-form-grid.one{grid-template-columns:1fr!important}#settingsModal .network-body-inner .settings-form-grid.one > .field{height:auto!important;min-height:0!important;grid-template-rows:18px 42px auto!important}}
 
+
+
+    /* v0.30.0 release polish: give the left tag filter more room without changing the overall layout */
+    .side{gap:0;}
+    .stats{gap:8px;margin:2px 0 12px;}
+    .stat{padding:10px 11px;min-height:58px;}
+    .stat b{font-size:20px;}
+    .stat span{margin-top:3px;font-size:11.5px;}
+    .nav-title{margin:10px 0 6px;}
+    .nav{gap:5px;}
+    .nav button{min-height:34px;padding:8px 10px;border-radius:14px;}
+    .tag-list{flex:1 1 190px;min-height:138px;max-height:none;overflow:auto;align-content:flex-start;padding-right:6px;padding-bottom:6px;gap:7px;scrollbar-gutter:stable;}
+    .tag-chip{padding:6px 9px;font-size:11.5px;line-height:1.25;}
+    .footer-note{flex:0 0 auto;margin-top:8px;padding-top:8px;font-size:11px;line-height:1.45;}
+    @media (min-height: 860px){.tag-list{min-height:190px;}.nav button{min-height:36px;}}
+    @media (max-height: 760px){.brand{margin-bottom:12px}.bangumi-logo{width:48px;height:48px}.stats{margin-bottom:10px}.stat{min-height:52px;padding:8px 10px}.nav button{min-height:32px;padding:7px 10px}.tag-list{min-height:120px}.footer-note{font-size:10.5px;line-height:1.35}}
+
+  
+
+    /* v0.30.0 final: sidebar balance and public tag persistence polish */
+    .side{padding:14px 14px 12px!important;display:flex!important;flex-direction:column!important;min-height:0!important;}
+    .brand{margin-bottom:12px!important;}
+    .stats{gap:8px!important;margin:2px 0 12px!important;}
+    .stat{min-height:58px!important;padding:10px 11px!important;}
+    .stat b{font-size:22px!important;}
+    .stat span{font-size:11px!important;margin-top:4px!important;}
+    .nav-title{margin:9px 0 6px!important;font-size:11px!important;}
+    .nav{gap:6px!important;flex:0 0 auto!important;}
+    .nav button{min-height:36px!important;padding:8px 10px!important;border-radius:14px!important;font-size:14px!important;}
+    .badge{font-size:10.5px!important;padding:2px 7px!important;}
+    .tag-list{flex:1 1 170px!important;min-height:150px!important;max-height:none!important;overflow:auto!important;align-content:flex-start!important;gap:7px!important;padding:0 6px 6px 0!important;scrollbar-gutter:stable!important;}
+    .tag-list .tag-chip{font-size:11px!important;padding:6px 9px!important;}
+    .footer-note{flex:0 0 auto!important;margin-top:6px!important;padding-top:7px!important;font-size:10.5px!important;line-height:1.32!important;}
+    @media (min-height: 830px){.tag-list{min-height:190px!important}.nav button{min-height:37px!important}}
+    @media (max-height: 780px){.bangumi-logo{width:46px!important;height:46px!important}.brand{margin-bottom:9px!important}.stats{margin-bottom:9px!important}.stat{min-height:52px!important;padding:8px 10px!important}.nav-title{margin:7px 0 5px!important}.nav button{min-height:33px!important;padding:7px 10px!important}.tag-list{min-height:132px!important}.footer-note{font-size:10px!important;line-height:1.25!important}}
+
   </style>
 </head>
 <body>
@@ -2162,6 +2198,16 @@
           added++; state.history.push({subject_id:n.subject_id, change_type:'added', old:null, new:structuredClone(state.collections[id]), created_at:started_at, sync_run_id:runId, note:mode==='recent'?'最近同步首次备份':'首次备份'});
         }
         else{
+          // 保留用户主动刷新过的公共标签缓存。
+          // 收藏同步接口有时只带简略/空标签，不能覆盖“刷新公共标签”拿到的完整缓存。
+          const oldPublicTags = publicTagsOf(old);
+          const newPublicTags = publicTagsOf(n);
+          if(oldPublicTags.length && old.public_tags_fetched_at && (!newPublicTags.length || !n.public_tags_fetched_at)){
+            n.publicTags = oldPublicTags;
+            n.public_tags_fetched_at = old.public_tags_fetched_at;
+            n.public_tags_source = old.public_tags_source || n.public_tags_source || 'api';
+            n.content_hash = hashString(stableStringify(comparable(n)));
+          }
           if(old.status === 'missing_candidate' || old.status === 'protected_local' || old.status === 'confirmed_deleted'){ restored++; state.history.push({subject_id:n.subject_id, change_type:'restored', old:structuredClone(old), new:structuredClone(n), changes:collectionFieldDiff(old, n), created_at:started_at, sync_run_id:runId, note:'远端重新出现'}); }
           if(old.content_hash !== n.content_hash){ const changes = collectionFieldDiff(old, n); modified++; state.history.push({subject_id:n.subject_id, change_type:'modified', old:structuredClone(old), new:structuredClone(n), changes, created_at:started_at, sync_run_id:runId, note:'收藏字段、吐槽、标签、评分、进度或条目资料变化'}); }
           state.collections[id] = {...old, ...n, status:'active', first_seen_at:old.first_seen_at || started_at, last_seen_at:started_at, last_synced_at:started_at, missing_count:0, last_sync_run_id:runId};

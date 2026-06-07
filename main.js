@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, shell, Menu, nativeImage, screen } = require('electron');
+const { app, BrowserWindow, ipcMain, shell, Menu, nativeImage, screen, net } = require('electron');
 const http = require('http');
 const https = require('https');
 const fs = require('fs');
@@ -13,6 +13,8 @@ const IMAGES_DIR_NAME = '封面缓存';
 const BACKUPS_DIR_NAME = '备份';
 const LOGS_DIR_NAME = '日志';
 const STATE_FILE_NAME = '收藏数据.json';
+const APP_USER_AGENT = 'AKISATO57/AKI-Bangumi-Vault/0.30.0 (https://github.com/AKISATO57/AKI-Bangumi-Vault)';
+const IMAGE_ACCEPT = 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8';
 let mainWindow = null;
 let localServer = null;
 let localServerUrl = '';
@@ -203,7 +205,14 @@ function guessImageExt(contentType, remoteUrl) {
   return '.jpg';
 }
 
-function downloadBuffer(remoteUrl, redirectsLeft = 5) {
+function normalizeContentType(headers) {
+  if (!headers) return '';
+  const direct = headers['content-type'] || headers['Content-Type'];
+  if (Array.isArray(direct)) return direct[0] || '';
+  return direct || '';
+}
+
+function downloadBufferViaNode(remoteUrl, redirectsLeft = 5) {
   return new Promise((resolve, reject) => {
     let parsed;
     try { parsed = new URL(remoteUrl); } catch (err) { reject(err); return; }
@@ -211,9 +220,11 @@ function downloadBuffer(remoteUrl, redirectsLeft = 5) {
     const req = client.request(parsed, {
       method: 'GET',
       headers: {
-        'User-Agent': 'BangumiVault/0.29.6 (local image backup)',
+        'User-Agent': APP_USER_AGENT,
         'Referer': 'https://bgm.tv/',
-        'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8'
+        'Accept': IMAGE_ACCEPT,
+        'Accept-Language': 'zh-CN,zh;q=0.9,ja;q=0.8,en;q=0.6',
+        'Cache-Control': 'no-cache'
       },
       timeout: 30000
     }, res => {
@@ -221,7 +232,7 @@ function downloadBuffer(remoteUrl, redirectsLeft = 5) {
       if ([301, 302, 303, 307, 308].includes(status) && res.headers.location && redirectsLeft > 0) {
         res.resume();
         const next = new URL(res.headers.location, parsed).toString();
-        downloadBuffer(next, redirectsLeft - 1).then(resolve, reject);
+        downloadBufferViaNode(next, redirectsLeft - 1).then(resolve, reject);
         return;
       }
       if (status < 200 || status >= 300) {
@@ -231,12 +242,79 @@ function downloadBuffer(remoteUrl, redirectsLeft = 5) {
       }
       const chunks = [];
       res.on('data', chunk => chunks.push(chunk));
-      res.on('end', () => resolve({ buffer: Buffer.concat(chunks), contentType: res.headers['content-type'] || '' }));
+      res.on('end', () => resolve({ buffer: Buffer.concat(chunks), contentType: normalizeContentType(res.headers) }));
     });
     req.on('timeout', () => req.destroy(new Error('Request timeout')));
     req.on('error', reject);
     req.end();
   });
+}
+
+function downloadBufferViaElectronNet(remoteUrl, redirectsLeft = 5) {
+  return new Promise((resolve, reject) => {
+    if (!net || typeof net.request !== 'function') {
+      reject(new Error('Electron net is unavailable'));
+      return;
+    }
+    const req = net.request({ method: 'GET', url: remoteUrl });
+    let settled = false;
+    const timer = setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      try { req.abort(); } catch {}
+      reject(new Error('Request timeout'));
+    }, 30000);
+    const finish = (fn, value) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      fn(value);
+    };
+    try {
+      req.setHeader('User-Agent', APP_USER_AGENT);
+      req.setHeader('Referer', 'https://bgm.tv/');
+      req.setHeader('Accept', IMAGE_ACCEPT);
+      req.setHeader('Accept-Language', 'zh-CN,zh;q=0.9,ja;q=0.8,en;q=0.6');
+      req.setHeader('Cache-Control', 'no-cache');
+    } catch {}
+    req.on('redirect', (statusCode, method, redirectUrl) => {
+      if (redirectsLeft > 0) {
+        try { req.followRedirect(); } catch {}
+      } else {
+        finish(reject, new Error(`Too many redirects: ${statusCode} ${redirectUrl || ''}`.trim()));
+        try { req.abort(); } catch {}
+      }
+    });
+    req.on('response', res => {
+      const status = res.statusCode || 0;
+      if (status < 200 || status >= 300) {
+        res.resume();
+        finish(reject, new Error(`HTTP ${status}`));
+        return;
+      }
+      const chunks = [];
+      res.on('data', chunk => chunks.push(Buffer.from(chunk)));
+      res.on('end', () => finish(resolve, { buffer: Buffer.concat(chunks), contentType: normalizeContentType(res.headers) }));
+      res.on('error', err => finish(reject, err));
+    });
+    req.on('error', err => finish(reject, err));
+    req.end();
+  });
+}
+
+async function downloadBuffer(remoteUrl) {
+  try {
+    // Prefer Chromium's network stack. It matches the in-app preview path better than Node's https module
+    // and respects the user's system proxy / TLS / DNS behavior.
+    return await downloadBufferViaElectronNet(remoteUrl);
+  } catch (electronErr) {
+    try {
+      return await downloadBufferViaNode(remoteUrl);
+    } catch (nodeErr) {
+      const msg = `${electronErr?.message || electronErr}; fallback: ${nodeErr?.message || nodeErr}`;
+      throw new Error(msg);
+    }
+  }
 }
 
 
@@ -248,7 +326,7 @@ function downloadText(remoteUrl, redirectsLeft = 5) {
     const req = client.request(parsed, {
       method: 'GET',
       headers: {
-        'User-Agent': 'BangumiVault/0.29.3 (local subject tag backup)',
+        'User-Agent': APP_USER_AGENT,
         'Referer': 'https://bgm.tv/',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
         'Accept-Language': 'zh-CN,zh;q=0.9,ja;q=0.8,en;q=0.6'
