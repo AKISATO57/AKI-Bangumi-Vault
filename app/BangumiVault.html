@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Bangumi 保管库 - 本地备份</title>
-  <meta name="description" content="Bangumi 本地保险箱：收藏、标签、吐槽、评分、进度、历史版本与离线导出。" />
+  <meta name="description" content="Bangumi 本地保管库：收藏、标签、吐槽、评分、进度、历史版本与离线导出。" />
   <style>
     :root{
       --bg:#10111a; --bg2:#151725; --panel:rgba(255,255,255,.08); --panel2:rgba(255,255,255,.12);
@@ -562,13 +562,754 @@
   
   .hist-change{margin-top:4px;color:var(--text-muted);line-height:1.45}.hist-change span{color:var(--text);font-weight:700}
 
-</style>
+
+
+    /* v0.29.6 user requested polish: horizontal settings, subject summary first, adaptive defaults */
+    button,.btn,.segmented button,.select-trigger,.select-menu button,summary,.nav button,.tag-chip{user-select:none;-webkit-user-select:none}
+    input,textarea{user-select:text;-webkit-user-select:text}
+    .settings-card{--modal-max:1180px;width:min(1180px,calc(100vw - 32px))!important}
+    .settings-intro{margin:10px 0 0;color:var(--muted);line-height:1.6;font-size:13px}
+    .settings-layout{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:16px;align-items:start}
+    .settings-section{border:var(--ui-border-width) solid var(--line);background:rgba(255,255,255,.055);border-radius:22px;padding:15px;min-width:0}
+    .settings-section.wide{grid-column:span 2}.settings-section.full{grid-column:1/-1}
+    .settings-section h3{margin:0 0 12px;font-size:15px;letter-spacing:.02em;color:var(--text)}
+    .settings-section .field{margin:10px 0}.settings-section .field:first-of-type{margin-top:0}.settings-section .help,.settings-section .setting-help{font-size:12px;line-height:1.55;color:var(--muted);margin-top:6px}.settings-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.settings-row.three{grid-template-columns:repeat(3,minmax(0,1fr))}.settings-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:14px}.settings-actions .btn{min-width:130px}.settings-note{margin-top:14px;padding:12px 14px;border-radius:18px;border:var(--ui-border-width) solid rgba(255,209,102,.24);background:rgba(255,209,102,.09);font-size:13px;color:var(--soft);line-height:1.6}
+    .advanced-settings{padding:0!important;margin:0!important;border:0!important;background:transparent!important}.advanced-settings summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:12px;border:var(--ui-border-width) solid var(--line);border-radius:18px;background:rgba(255,255,255,.065);padding:12px 14px;cursor:pointer;font-weight:900;transition:background .18s ease,border-color .18s ease,box-shadow .18s ease}.advanced-settings summary::-webkit-details-marker{display:none}.advanced-settings summary:hover{background:rgba(255,255,255,.095);border-color:rgba(255,126,182,.35);box-shadow:0 12px 26px rgba(0,0,0,.12)}.advanced-settings summary::after{content:"";width:9px;height:9px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg);opacity:.7;transition:transform .22s cubic-bezier(.22,1,.36,1)}.advanced-settings[open] summary::after{transform:rotate(225deg)}.advanced-body{margin-top:12px;display:grid;grid-template-rows:0fr;opacity:0;transform:translateY(-4px);transition:grid-template-rows .25s cubic-bezier(.22,1,.36,1),opacity .2s ease,transform .2s ease}.advanced-settings[open] .advanced-body{grid-template-rows:1fr;opacity:1;transform:translateY(0)}.advanced-body-inner{overflow:hidden;border:var(--ui-border-width) solid var(--line);border-radius:20px;background:rgba(255,255,255,.045);padding:14px}.advanced-warning{margin-top:10px;color:var(--muted);font-size:12px;line-height:1.6}.font-custom-row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end;margin-top:10px}.font-custom-row .field{margin:0}.setting-card{padding:14px}.segmented button{user-select:none;-webkit-user-select:none}
+    [data-font="custom"]{font-family:var(--font-main)}
+    [data-motion="soft"] body:before,[data-motion="soft"] body:after{animation:none!important;opacity:.22!important;filter:blur(110px)!important}
+    [data-motion="soft"] .card{animation:none!important;transition:transform .18s ease,filter .18s ease!important}
+    [data-motion="soft"] .card:hover{transform:translateY(-5px) scale(1.01)!important;filter:none!important}
+    [data-motion="soft"] .card:hover .cover{transform:scale(1.02)!important;filter:none!important}
+    [data-motion="soft"] .card:hover::after,[data-motion="soft"] .card:hover .card-glow{opacity:0!important}
+    [data-motion="soft"] .modal-mask.show .modal-card,[data-motion="soft"] .drawer.show{animation:none!important}
+    .subject-summary-card{order:0}.comment-card{order:1}
+    @media (max-width:1100px){.settings-layout{grid-template-columns:repeat(2,minmax(0,1fr))}.settings-section.wide{grid-column:1/-1}.settings-row.three{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media (max-width:720px){.settings-layout,.settings-row,.settings-row.three{grid-template-columns:1fr}.settings-section.wide,.settings-section.full{grid-column:auto}.settings-actions .btn{flex:1 1 100%}.font-custom-row{grid-template-columns:1fr}.settings-card{width:calc(100vw - 16px)!important}}
+
+
+
+    /* v0.29.7 settings cleanup + subject summary + network accordion */
+    .settings-card{--modal-max:1160px;width:min(1160px,calc(100vw - 32px))!important;padding:22px!important}
+    .settings-card .settings-head{display:flex;align-items:flex-start;gap:14px;margin-bottom:16px}.settings-card .settings-head h2{margin:0;font-size:24px;letter-spacing:-.03em}.settings-card .settings-head p{margin:5px 0 0;color:var(--muted);font-size:13px;line-height:1.55}.settings-card .settings-head .btn{flex:none}
+    .settings-board{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}.settings-column{display:grid;gap:14px;min-width:0}.settings-panel{border:var(--ui-border-width) solid var(--line);background:rgba(255,255,255,.055);border-radius:22px;padding:16px;min-width:0}.settings-panel h3{margin:0 0 12px;font-size:15px;letter-spacing:.02em;color:var(--text)}.settings-panel .field{margin:0}.settings-panel .field+ .field{margin-top:12px}.settings-panel label{font-size:12px;color:var(--muted);font-weight:800}.settings-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.settings-form-grid.one{grid-template-columns:1fr}.settings-form-grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}.settings-panel textarea{min-height:128px;resize:vertical}.settings-panel .help,.settings-panel .setting-help{margin-top:6px;color:var(--muted);font-size:12px;line-height:1.48}.settings-panel .segmented{align-items:center}.settings-panel .segmented button{user-select:none;-webkit-user-select:none}.settings-mini-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}.settings-mini-actions .btn{min-width:124px}.settings-footer-actions{display:flex;gap:10px;align-items:center;justify-content:flex-end;flex-wrap:wrap;margin-top:16px}.settings-footer-actions .btn{min-width:132px}.settings-note{margin-top:12px;padding:12px 14px;border-radius:18px;border:var(--ui-border-width) solid rgba(255,209,102,.22);background:rgba(255,209,102,.08);font-size:13px;color:var(--soft);line-height:1.55}.settings-links{display:grid;grid-template-columns:1fr 1fr;gap:10px}.settings-link{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--text);border:var(--ui-border-width) solid var(--line);background:rgba(255,255,255,.06);border-radius:18px;padding:12px;transition:transform .16s ease, border-color .16s ease, background .16s ease}.settings-link:hover{transform:translateY(-1px);border-color:rgba(70,217,255,.35);background:rgba(255,255,255,.09)}.settings-link .icon{width:30px;height:30px;border-radius:11px;display:grid;place-items:center;background:linear-gradient(135deg,rgba(255,126,182,.22),rgba(124,92,255,.18));font-size:16px;flex:none}.settings-link b{display:block;font-size:13px}.settings-link span:last-child{display:block;color:var(--muted);font-size:12px;margin-top:2px}.remember-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px}.remember-row .pill{cursor:pointer}.network-settings{margin-top:0;border:0!important;background:transparent!important;padding:0!important;user-select:none;-webkit-user-select:none}.network-settings summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 0 10px 0;cursor:pointer;font-weight:900;color:var(--text)}.network-settings summary::-webkit-details-marker{display:none}.network-settings summary::after{content:"";width:9px;height:9px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg);opacity:.72;transition:transform .22s cubic-bezier(.22,1,.36,1)}.network-settings[open] summary::after{transform:rotate(225deg)}.network-body{display:grid;grid-template-rows:0fr;opacity:0;transform:translateY(-4px);transition:grid-template-rows .26s cubic-bezier(.22,1,.36,1),opacity .18s ease,transform .18s ease}.network-settings[open] .network-body{grid-template-rows:1fr;opacity:1;transform:translateY(0)}.network-body-inner{overflow:hidden;border-top:var(--ui-border-width) solid var(--line);padding-top:12px}.network-warning{margin-top:10px;color:var(--muted);font-size:12px;line-height:1.55}.export-help-list{display:grid;gap:8px;margin:12px 0 14px;color:var(--soft);font-size:13px;line-height:1.55}.export-help-list div{border:var(--ui-border-width) solid var(--line);background:rgba(255,255,255,.045);border-radius:14px;padding:10px 12px}.subject-summary-card .longtext:empty::after{content:'暂无条目简介。';color:var(--muted)}
+    @media (max-width:980px){.settings-board,.settings-form-grid,.settings-form-grid.three,.settings-links{grid-template-columns:1fr}.settings-card{width:calc(100vw - 16px)!important;padding:16px!important}.settings-footer-actions{justify-content:stretch}.settings-footer-actions .btn{flex:1 1 100%}}
+
+  
+
+    /* v0.29.9 landscape settings pass */
+    #settingsModal{align-items:center;justify-content:center;}
+    #settingsModal .settings-card{
+      --modal-max:1360px;
+      width:min(1360px,calc(100vw - 36px))!important;
+      height:min(820px,calc(100vh - 36px))!important;
+      max-height:none!important;
+      aspect-ratio:16/10;
+      display:grid;
+      grid-template-rows:auto minmax(0,1fr) auto auto;
+      overflow:hidden;
+      padding:22px!important;
+    }
+    #settingsModal .settings-head{margin-bottom:14px!important;}
+    #settingsModal .settings-board{
+      min-height:0;
+      overflow:auto;
+      padding:2px 4px 8px 2px;
+      display:grid!important;
+      grid-template-columns:minmax(330px,1.12fr) minmax(300px,1fr) minmax(300px,1fr)!important;
+      grid-auto-flow:column;
+      grid-template-rows:auto auto;
+      gap:14px!important;
+      align-items:start;
+      scrollbar-gutter:stable;
+    }
+    #settingsModal .settings-column{display:contents!important;}
+    #settingsModal .settings-panel{height:100%;}
+    #settingsModal .settings-panel .field{display:grid;grid-template-rows:18px auto auto;align-content:start;gap:7px;}
+    #settingsModal .settings-panel .field label{margin:0;line-height:18px;white-space:nowrap;}
+    #settingsModal .settings-panel .field input,#settingsModal .settings-panel .field textarea{min-height:44px;}
+    #settingsModal .settings-form-grid{align-items:start;}
+    #settingsModal .settings-form-grid.three{grid-template-columns:repeat(3,minmax(0,1fr));}
+    #settingsModal .token-field{height:100%;}
+    #settingsModal .token-field textarea{min-height:116px;}
+    #settingsModal .token-actions{display:flex;gap:8px;align-items:center;margin-top:4px;}
+    #settingsModal .token-actions .btn{min-width:116px;}
+    #settingsModal .settings-links .svg-icon{color:var(--text);font-size:0;}
+    #settingsModal .settings-links .svg-icon svg{width:19px;height:19px;display:block;}
+    #settingsModal .font-apply-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:end;margin-top:12px;}
+    #settingsModal .font-apply-row .field{margin:0;}
+    #settingsModal .font-apply-row .btn{height:44px;min-width:76px;}
+    #settingsModal .settings-footer-actions{margin-top:10px!important;}
+    #settingsModal .settings-note{margin-top:10px!important;}
+    #settingsModal .network-settings summary{padding:2px 0 10px 0!important;}
+    #settingsModal .network-body{display:block!important;max-height:0;overflow:hidden;opacity:0;transform:translateY(-6px);transition:max-height .34s cubic-bezier(.22,1,.36,1),opacity .22s ease,transform .22s ease;}
+    #settingsModal .network-settings[open] .network-body{max-height:560px;opacity:1;transform:translateY(0);}
+    #settingsModal .network-body-inner{overflow:hidden;border-top:var(--ui-border-width) solid var(--line);padding-top:12px;}
+    [data-motion="soft"] #settingsModal .network-body{transition:max-height .24s ease,opacity .18s ease,transform .18s ease;}
+    [data-motion="off"] #settingsModal .network-body{transition:none!important;}
+    @media (max-width:1180px){
+      #settingsModal .settings-card{width:calc(100vw - 16px)!important;height:calc(100vh - 16px)!important;aspect-ratio:auto;}
+      #settingsModal .settings-board{grid-auto-flow:row;grid-template-columns:repeat(2,minmax(0,1fr))!important;grid-template-rows:none;}
+    }
+    @media (max-width:780px){
+      #settingsModal .settings-board{grid-template-columns:1fr!important;}
+      #settingsModal .settings-form-grid,#settingsModal .settings-form-grid.three,#settingsModal .settings-links{grid-template-columns:1fr!important;}
+      #settingsModal .font-apply-row{grid-template-columns:1fr;}
+    }
+
+  
+
+    /* v0.29.9 compact landscape settings: variable-size cards, footer links, no-scroll when collapsed */
+    .settings-card{
+      --modal-max:1320px!important;
+      width:min(1320px,calc(100vw - 40px))!important;
+      max-height:min(760px,calc(100vh - 40px))!important;
+      aspect-ratio:16 / 9;
+      padding:18px!important;
+      display:flex;
+      flex-direction:column;
+      overflow:hidden!important;
+    }
+    .settings-card .settings-head{display:flex;align-items:flex-start;gap:12px;margin-bottom:12px;flex:none}
+    .settings-card .settings-head h2{margin:0;font-size:23px;letter-spacing:-.035em}
+    .settings-card .settings-head p{margin:4px 0 0;color:var(--muted);font-size:12px;line-height:1.45;max-width:820px}
+    .settings-card .settings-head .btn{flex:none}
+    .settings-board{
+      flex:1;
+      min-height:0;
+      display:grid;
+      grid-template-columns:1.28fr .95fr .9fr;
+      grid-template-rows:auto auto minmax(0,1fr) auto;
+      gap:12px;
+      align-items:start;
+      overflow:visible;
+    }
+    .settings-panel{
+      border:var(--ui-border-width) solid var(--line);
+      background:rgba(255,255,255,.052);
+      border-radius:21px;
+      padding:14px;
+      min-width:0;
+      align-self:start;
+    }
+    .settings-panel h3{margin:0 0 10px;font-size:14px;letter-spacing:.02em;color:var(--text)}
+    .settings-panel label{font-size:12px;color:var(--muted);font-weight:800}
+    .settings-panel .field{margin:0}.settings-panel .field + .field{margin-top:10px}
+    .settings-panel .help,.settings-panel .setting-help{margin-top:5px;color:var(--muted);font-size:11.5px;line-height:1.45}
+    .settings-panel.account{grid-column:1;grid-row:1 / span 2;align-self:stretch}
+    .settings-panel.display{grid-column:1;grid-row:3}
+    .settings-panel.theme{grid-column:2;grid-row:1 / span 2;align-self:stretch}
+    .settings-panel.motion{grid-column:3;grid-row:1}
+    .settings-panel.network-panel{grid-column:2 / span 2;grid-row:3;padding:0!important;background:transparent!important;border:0!important;align-self:start}
+    .settings-token-grid{display:grid;grid-template-columns:minmax(260px,1.25fr) minmax(180px,.75fr);gap:12px;align-items:start}
+    .settings-panel textarea#tokenInput{min-height:144px;resize:none}
+    .token-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.token-actions .btn{flex:1 1 120px;min-width:0}
+    .remember-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px}.remember-row .help{margin:0;font-size:11.5px;flex:1 1 160px}
+    .settings-form-grid,.settings-form-grid.one,.settings-form-grid.three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+    .settings-form-grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .settings-form-grid.one{grid-template-columns:1fr}
+    .settings-field-even label{min-height:28px;display:flex;align-items:flex-end}
+    .settings-field-even input{height:48px}
+    .setting-title{font-size:13px;font-weight:900;margin:0 0 8px;color:var(--soft)}
+    .setting-title:not(:first-child){margin-top:11px}
+    .segmented{display:flex;gap:7px;flex-wrap:wrap}.segmented button{padding:7px 10px;min-height:34px;user-select:none;-webkit-user-select:none}
+    .font-apply-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:end;margin-top:10px}.font-apply-row .field{margin:0}.font-apply-row .btn{height:48px;min-width:68px}
+    .settings-link-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
+    .settings-foot-link{width:28px;height:28px;border-radius:10px;border:var(--ui-border-width) solid var(--line);background:rgba(255,255,255,.055);color:var(--soft);display:inline-grid;place-items:center;text-decoration:none;transition:transform .16s ease,border-color .16s ease,background .16s ease;color .16s ease}
+    .settings-foot-link:hover{transform:translateY(-1px);border-color:rgba(70,217,255,.38);background:rgba(255,255,255,.09);color:var(--text)}
+    .settings-foot-link svg{width:17px;height:17px}
+    .settings-footer-actions{margin-top:0;display:flex;align-items:center;justify-content:space-between;gap:10px;flex:none}
+    .settings-footer-left{display:flex;align-items:center;gap:10px;min-width:0;color:var(--muted);font-size:12px;line-height:1.4;flex:1}
+    .settings-footer-left .local-note{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .settings-footer-actions .btn{min-width:132px;flex:none}
+    #loginLog{max-height:54px;margin-top:8px!important;flex:none}
+    .network-settings{display:block;user-select:none;-webkit-user-select:none}
+    .network-settings summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 15px;border:var(--ui-border-width) solid var(--line);border-radius:19px;background:rgba(255,255,255,.06);cursor:pointer;font-weight:900;transition:background .18s ease,border-color .18s ease,box-shadow .18s ease}
+    .network-settings summary::-webkit-details-marker{display:none}.network-settings summary:hover{background:rgba(255,255,255,.09);border-color:rgba(255,126,182,.34);box-shadow:0 14px 32px rgba(0,0,0,.13)}
+    .network-settings summary:after{content:"";width:9px;height:9px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg);opacity:.72;transition:transform .22s cubic-bezier(.22,1,.36,1)}
+    .network-settings[open] summary:after{transform:rotate(225deg)}
+    .network-body{display:grid;grid-template-rows:0fr;opacity:0;transform:translateY(-5px);transition:grid-template-rows .32s cubic-bezier(.22,1,.36,1),opacity .22s ease,transform .22s ease}
+    .network-settings[open] .network-body{grid-template-rows:1fr;opacity:1;transform:translateY(0)}
+    .network-body-inner{overflow:hidden;padding:10px 3px 0;background:transparent!important;border:0!important;border-radius:0!important}
+    .network-body-inner .settings-form-grid.one{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+    .network-warning{margin-top:9px;color:var(--muted);font-size:11.5px;line-height:1.5}
+    .settings-note{display:none!important}
+    @media (max-width:1180px){
+      .settings-card{aspect-ratio:auto;max-height:calc(100vh - 28px)!important;overflow:auto!important}
+      .settings-board{grid-template-columns:1fr 1fr;grid-template-rows:auto;overflow:visible}.settings-panel.account,.settings-panel.display,.settings-panel.theme,.settings-panel.motion,.settings-panel.network-panel{grid-column:auto;grid-row:auto;align-self:start}.settings-panel.network-panel{grid-column:1/-1}.settings-token-grid{grid-template-columns:1fr}.network-body-inner .settings-form-grid.one{grid-template-columns:1fr}.settings-form-grid{grid-template-columns:1fr 1fr}
+    }
+    @media (max-width:760px){.settings-board,.settings-token-grid,.settings-form-grid,.settings-form-grid.two,.settings-form-grid.three{grid-template-columns:1fr}.font-apply-row{grid-template-columns:1fr}.font-apply-row .btn{height:auto}.settings-footer-actions{align-items:stretch;flex-direction:column}.settings-footer-left{width:100%}}
+
+
+
+    /* v0.29.10 settings alignment + accent controls */
+    #syncBtn.btn.primary{
+      background:rgba(124,92,255,.14)!important;
+      border-color:rgba(124,92,255,.34)!important;
+      color:var(--text)!important;
+      box-shadow:none!important;
+      font-weight:850;
+    }
+    #syncBtn.btn.primary:hover{background:rgba(124,92,255,.20)!important;border-color:rgba(124,92,255,.46)!important;box-shadow:0 14px 30px rgba(124,92,255,.12)!important;}
+    #settingsModal .settings-card{
+      --modal-max:1380px!important;
+      width:min(1380px,calc(100vw - 40px))!important;
+      height:auto!important;
+      min-height:0!important;
+      max-height:calc(100vh - 40px)!important;
+      aspect-ratio:auto!important;
+      padding:22px 24px 18px!important;
+      display:flex!important;
+      flex-direction:column!important;
+      overflow:visible!important;
+    }
+    #settingsModal .settings-head{margin-bottom:14px!important;flex:0 0 auto!important;}
+    #settingsModal .settings-board{
+      display:grid!important;
+      grid-template-columns:minmax(480px,1.18fr) minmax(410px,1fr) minmax(350px,.88fr)!important;
+      grid-template-rows:auto auto!important;
+      grid-template-areas:
+        "account theme motion"
+        "display network network"!important;
+      grid-auto-flow:row!important;
+      gap:14px 14px!important;
+      align-items:start!important;
+      overflow:visible!important;
+      min-height:0!important;
+      padding:0!important;
+      flex:0 0 auto!important;
+      scrollbar-gutter:auto!important;
+    }
+    #settingsModal .settings-column{display:contents!important;}
+    #settingsModal .settings-panel{
+      height:auto!important;
+      min-height:0!important;
+      align-self:start!important;
+      padding:15px!important;
+      border:var(--ui-border-width) solid var(--line)!important;
+      background:rgba(255,255,255,.052)!important;
+      box-sizing:border-box!important;
+    }
+    #settingsModal .settings-panel.account{grid-area:account!important;}
+    #settingsModal .settings-panel.theme{grid-area:theme!important;}
+    #settingsModal .settings-panel.motion{grid-area:motion!important;}
+    #settingsModal .settings-panel.display{grid-area:display!important;}
+    #settingsModal .settings-panel.network-panel{grid-area:network!important;padding:0!important;border:0!important;background:transparent!important;}
+    #settingsModal .settings-panel h3{margin-bottom:10px!important;line-height:1.25!important;}
+    #settingsModal .settings-panel .field{display:block!important;margin:0!important;}
+    #settingsModal .settings-panel .field + .field{margin-top:10px!important;}
+    #settingsModal .settings-panel .field label{display:block!important;margin:0 0 7px!important;line-height:18px!important;min-height:18px!important;white-space:nowrap!important;}
+    #settingsModal .settings-panel input,
+    #settingsModal .settings-panel textarea{min-height:44px!important;box-sizing:border-box!important;}
+    #settingsModal .settings-token-grid{display:grid!important;grid-template-columns:minmax(260px,1.12fr) minmax(178px,.78fr)!important;gap:12px!important;align-items:start!important;}
+    #settingsModal .settings-panel textarea#tokenInput{min-height:108px!important;height:108px!important;resize:none!important;}
+    #settingsModal .token-actions{margin-top:9px!important;display:flex!important;gap:8px!important;}
+    #settingsModal .token-actions .btn{height:38px!important;min-width:0!important;flex:1 1 0!important;}
+    #settingsModal .remember-row{margin-top:9px!important;gap:8px!important;}
+    #settingsModal .remember-row .help{font-size:11.5px!important;line-height:1.4!important;}
+    #settingsModal .settings-form-grid.three{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:10px!important;align-items:start!important;}
+    #settingsModal .settings-field-even{display:block!important;}
+    #settingsModal .settings-field-even label{height:18px!important;min-height:18px!important;display:block!important;overflow:hidden;text-overflow:ellipsis;}
+    #settingsModal .settings-field-even input{height:44px!important;min-height:44px!important;}
+    #settingsModal .display .setting-help{margin-top:8px!important;}
+    #settingsModal .motion{min-height:0!important;}
+    #settingsModal .motion .setting-title:not(:first-child){margin-top:12px!important;}
+    #settingsModal .accent-buttons button{position:relative;padding-left:28px!important;}
+    #settingsModal .accent-buttons button::before{content:"";position:absolute;left:9px;top:50%;width:12px;height:12px;border-radius:999px;transform:translateY(-50%);background:var(--accent-dot,#ff7eb6);box-shadow:0 0 0 2px rgba(255,255,255,.10);}
+    #settingsModal .accent-buttons button[data-value="sakura"]{--accent-dot:#ff7eb6;}
+    #settingsModal .accent-buttons button[data-value="violet"]{--accent-dot:#9b7cff;}
+    #settingsModal .accent-buttons button[data-value="cyan"]{--accent-dot:#46d9ff;}
+    #settingsModal .accent-buttons button[data-value="amber"]{--accent-dot:#ffd166;}
+    #settingsModal .accent-buttons button[data-value="mint"]{--accent-dot:#65e6a5;}
+    #settingsModal .settings-foot-link{width:34px!important;height:34px!important;border-radius:12px!important;}
+    #settingsModal .settings-foot-link svg{width:22px!important;height:22px!important;}
+    #settingsModal .settings-foot-link[title*="Bangumi"]{color:#ff7eb6;background:rgba(255,126,182,.10);}
+    #settingsModal .settings-footer-actions{margin-top:14px!important;flex:0 0 auto!important;}
+    #settingsModal .settings-footer-left{font-size:12px!important;}
+    #settingsModal .network-settings summary{
+      padding:13px 15px!important;
+      border:var(--ui-border-width) solid var(--line)!important;
+      border-radius:19px!important;
+      background:rgba(255,255,255,.06)!important;
+      box-shadow:none!important;
+    }
+    #settingsModal .network-settings summary:hover{background:rgba(255,255,255,.09)!important;border-color:rgba(255,126,182,.34)!important;}
+    #settingsModal .network-body{display:block!important;max-height:0!important;overflow:hidden!important;opacity:0!important;transform:translateY(-6px)!important;transition:max-height .32s cubic-bezier(.22,1,.36,1), opacity .22s ease, transform .22s ease!important;}
+    #settingsModal .network-settings[open] .network-body{max-height:310px!important;opacity:1!important;transform:translateY(0)!important;}
+    #settingsModal .network-body-inner{padding:10px 0 0!important;border:0!important;background:transparent!important;}
+    #settingsModal .network-body-inner .settings-form-grid.one{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:10px!important;}
+    #settingsModal .network-body-inner .field label{font-size:12px!important;}
+    @media (max-width:1180px){
+      #settingsModal .settings-card{width:calc(100vw - 16px)!important;max-height:calc(100vh - 16px)!important;overflow:auto!important;}
+      #settingsModal .settings-board{grid-template-columns:1fr 1fr!important;grid-template-areas:"account theme" "motion display" "network network"!important;}
+      #settingsModal .network-body-inner .settings-form-grid.one{grid-template-columns:1fr!important;}
+    }
+    @media (max-width:760px){
+      #settingsModal .settings-board{grid-template-columns:1fr!important;grid-template-areas:"account" "theme" "motion" "display" "network"!important;}
+      #settingsModal .settings-token-grid,#settingsModal .settings-form-grid.three{grid-template-columns:1fr!important;}
+    }
+
+
+
+    /* v0.30.0 final settings/layout pass */
+    :root{
+      --accent-bg:color-mix(in srgb,var(--a) 16%, transparent);
+      --accent-bg-2:color-mix(in srgb,var(--b) 14%, transparent);
+      --accent-line:color-mix(in srgb,var(--a) 42%, transparent);
+      --accent-line-2:color-mix(in srgb,var(--b) 34%, transparent);
+      --accent-glow:color-mix(in srgb,var(--a) 22%, transparent);
+    }
+    body{
+      background:
+        radial-gradient(circle at 12% 4%,color-mix(in srgb,var(--a) 26%, transparent),transparent 34rem),
+        radial-gradient(circle at 84% 8%,color-mix(in srgb,var(--c) 18%, transparent),transparent 30rem),
+        radial-gradient(circle at 45% 88%,color-mix(in srgb,var(--b) 24%, transparent),transparent 32rem),
+        linear-gradient(135deg,var(--bg),var(--bg2))!important;
+    }
+    [data-theme="light"] body{
+      background:
+        radial-gradient(circle at 10% 2%,color-mix(in srgb,var(--a) 16%, transparent),transparent 34rem),
+        radial-gradient(circle at 84% 8%,color-mix(in srgb,var(--c) 12%, transparent),transparent 30rem),
+        radial-gradient(circle at 48% 92%,color-mix(in srgb,var(--b) 14%, transparent),transparent 32rem),
+        linear-gradient(135deg,var(--bg),var(--bg2))!important;
+    }
+    .nav button:hover,.nav button.active,.segmented button.active{background:linear-gradient(135deg,var(--accent-bg),var(--accent-bg-2))!important;border-color:var(--accent-line)!important;box-shadow:0 10px 24px var(--accent-glow)!important}
+    .search input:focus,.field input:focus,.field textarea:focus{border-color:var(--accent-line)!important;box-shadow:0 0 0 4px color-mix(in srgb,var(--a) 13%, transparent)!important}
+    .tag-chip.active{background:linear-gradient(135deg,color-mix(in srgb,var(--c) 18%, transparent),var(--accent-bg-2))!important;border-color:color-mix(in srgb,var(--c) 38%, transparent)!important}
+    .btn.primary{background:linear-gradient(135deg,var(--a),var(--b))!important;border-color:transparent!important;color:white!important}
+    #syncBtn.btn.primary{background:color-mix(in srgb,var(--b) 15%, transparent)!important;border-color:color-mix(in srgb,var(--b) 36%, transparent)!important;color:var(--text)!important;box-shadow:none!important;font-weight:850}
+    #syncBtn.btn.primary:hover{background:color-mix(in srgb,var(--b) 22%, transparent)!important;border-color:color-mix(in srgb,var(--b) 48%, transparent)!important;box-shadow:0 14px 30px color-mix(in srgb,var(--b) 14%, transparent)!important}
+    .bangumi-logo{color:var(--a)!important;box-shadow:0 18px 45px color-mix(in srgb,var(--a) 25%, transparent),inset 0 1px 0 rgba(255,255,255,.78)!important}.bangumi-logo svg{fill:currentColor!important}
+
+    #settingsModal .settings-card{
+      --modal-max:1300px!important;
+      width:min(1300px,calc(100vw - 40px))!important;
+      min-height:0!important;
+      height:min(720px,calc(100vh - 40px))!important;
+      max-height:calc(100vh - 40px)!important;
+      aspect-ratio:16/9!important;
+      padding:22px 24px 18px!important;
+      overflow:hidden!important;
+      display:flex!important;
+      flex-direction:column!important;
+    }
+    #settingsModal .settings-head{margin-bottom:12px!important;flex:0 0 auto!important}.settings-card .settings-head h2{font-size:24px!important}.settings-card .settings-head p{max-width:920px!important;font-size:12.5px!important}
+    #settingsModal .settings-board{
+      display:grid!important;
+      grid-template-columns:minmax(470px,1.15fr) minmax(390px,1fr) minmax(330px,.86fr)!important;
+      grid-template-rows:auto auto!important;
+      grid-template-areas:"account theme motion" "display network network"!important;
+      gap:14px!important;
+      align-items:start!important;
+      flex:0 0 auto!important;
+      overflow:visible!important;
+      min-height:0!important;
+      padding:0!important;
+    }
+    #settingsModal .settings-column{display:contents!important}
+    #settingsModal .settings-panel{height:auto!important;min-height:0!important;align-self:start!important;padding:14px!important;border:var(--ui-border-width) solid var(--line)!important;background:rgba(255,255,255,.052)!important;box-sizing:border-box!important}
+    #settingsModal .settings-panel.account{grid-area:account!important}.settings-panel.theme{grid-area:theme!important}.settings-panel.motion{grid-area:motion!important}.settings-panel.display{grid-area:display!important}.settings-panel.network-panel{grid-area:network!important;padding:0!important;border:0!important;background:transparent!important}
+    #settingsModal .settings-panel h3{margin:0 0 10px!important;line-height:1.2!important;font-size:14px!important}
+    #settingsModal .settings-panel .field{display:block!important;margin:0!important}.settings-panel .field+.field{margin-top:9px!important}
+    #settingsModal .settings-panel .field label{display:block!important;margin:0 0 7px!important;line-height:18px!important;min-height:18px!important;white-space:nowrap!important}
+    #settingsModal .settings-panel input,#settingsModal .settings-panel textarea{height:42px!important;min-height:42px!important;box-sizing:border-box!important}
+    #settingsModal .settings-token-grid{display:grid!important;grid-template-columns:minmax(260px,1.18fr) minmax(180px,.82fr)!important;gap:12px!important;align-items:start!important}
+    #settingsModal .settings-panel textarea#tokenInput{height:96px!important;min-height:96px!important;resize:none!important}
+    #settingsModal .token-actions{margin-top:8px!important;display:flex!important;gap:8px!important}.token-actions .btn{height:36px!important;min-width:0!important;flex:1 1 0!important}
+    #settingsModal .remember-row{margin-top:8px!important;display:flex!important;align-items:center!important;gap:8px!important;min-height:0!important}.remember-row .help{font-size:11.5px!important;line-height:1.35!important;margin:0!important}
+    #settingsModal .checkbox-row{display:inline-flex!important;align-items:center!important;gap:8px!important;min-height:34px!important;padding:7px 10px!important;border-radius:14px!important;border:var(--ui-border-width) solid var(--line)!important;background:rgba(255,255,255,.045)!important;color:var(--soft)!important;line-height:1.2!important;cursor:pointer!important;user-select:none!important;-webkit-user-select:none!important;box-sizing:border-box!important}
+    #settingsModal .checkbox-row input{width:14px!important;height:14px!important;min-height:14px!important;margin:0!important;flex:none!important}.checkbox-row span{white-space:nowrap!important}
+    #settingsModal .settings-form-grid.three{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:10px!important;align-items:start!important}
+    #settingsModal .settings-field-even{display:block!important}.settings-field-even label{height:18px!important;min-height:18px!important;display:block!important;overflow:hidden!important;text-overflow:ellipsis!important}.settings-field-even input{height:42px!important;min-height:42px!important}
+    #settingsModal .display .setting-help{margin-top:8px!important;line-height:1.35!important}.settings-panel.display{padding-bottom:13px!important}
+    #settingsModal .setting-title{margin:0 0 8px!important;font-size:13px!important}.setting-title:not(:first-child){margin-top:11px!important}
+    #settingsModal .segmented{gap:7px!important}.segmented button{min-height:34px!important;padding:7px 10px!important;border-color:var(--line)!important}.segmented button.active{border-color:var(--accent-line)!important}
+    #settingsModal .accent-buttons button{position:relative!important;padding-left:28px!important}.accent-buttons button::before{content:"";position:absolute;left:9px;top:50%;width:12px;height:12px;border-radius:999px;transform:translateY(-50%);background:var(--accent-dot,#ff7eb6);box-shadow:0 0 0 2px rgba(255,255,255,.10)}
+    #settingsModal .accent-buttons button[data-value="sakura"]{--accent-dot:#ff7eb6}.accent-buttons button[data-value="violet"]{--accent-dot:#a78bfa}.accent-buttons button[data-value="cyan"]{--accent-dot:#38bdf8}.accent-buttons button[data-value="amber"]{--accent-dot:#fbbf24}.accent-buttons button[data-value="mint"]{--accent-dot:#34d399}
+    #settingsModal .font-apply-row{grid-template-columns:minmax(0,1fr) 68px!important;gap:8px!important;align-items:end!important;margin-top:10px!important}.font-apply-row .btn{height:42px!important;min-width:68px!important}
+    #settingsModal .network-settings summary{padding:12px 14px!important;border:var(--ui-border-width) solid var(--line)!important;border-radius:18px!important;background:rgba(255,255,255,.06)!important;box-shadow:none!important}.network-settings summary:hover{background:rgba(255,255,255,.09)!important;border-color:var(--accent-line)!important}
+    #settingsModal .network-body{display:block!important;max-height:0!important;overflow:hidden!important;opacity:0!important;transform:translateY(-6px)!important;transition:max-height .32s cubic-bezier(.22,1,.36,1),opacity .22s ease,transform .22s ease!important}.network-settings[open] .network-body{max-height:300px!important;opacity:1!important;transform:translateY(0)!important}.network-body-inner{padding:10px 0 0!important;border:0!important;background:transparent!important}.network-body-inner .settings-form-grid.one{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:10px!important}.network-check{margin-top:10px!important}.network-warning{margin-top:8px!important;font-size:11.5px!important;line-height:1.42!important}
+    #settingsModal .settings-footer-actions{margin-top:auto!important;display:flex!important;align-items:center!important;justify-content:space-between!important;gap:12px!important;flex:0 0 auto!important}.settings-footer-left{font-size:12px!important;display:flex!important;align-items:center!important;gap:10px!important;min-width:0!important;flex:1!important}.settings-link-row{display:flex!important;align-items:center!important;gap:8px!important;flex:none!important}.settings-foot-link{width:36px!important;height:36px!important;border-radius:13px!important;color:var(--soft)!important;background:rgba(255,255,255,.055)!important;border:var(--ui-border-width) solid var(--line)!important}.settings-foot-link:hover{color:var(--text)!important;border-color:var(--accent-line)!important;background:rgba(255,255,255,.09)!important}.settings-foot-link svg{width:23px!important;height:23px!important;display:block!important;fill:currentColor!important}.settings-foot-link-bgm{color:var(--a)!important;background:rgba(255,255,255,.055)!important}.settings-foot-link-bgm svg{width:25px!important;height:25px!important}.settings-footer-left .local-note{white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}.settings-footer-actions .btn{min-width:132px!important;flex:none!important}
+    #loginLog{display:none!important}
+    [data-motion="soft"] body:before,[data-motion="soft"] body:after{animation:none!important;opacity:.24!important}[data-motion="off"] body:before,[data-motion="off"] body:after{display:none!important}
+    @media (max-width:1180px){#settingsModal .settings-card{width:calc(100vw - 16px)!important;height:auto!important;max-height:calc(100vh - 16px)!important;overflow:auto!important;aspect-ratio:auto!important}#settingsModal .settings-board{grid-template-columns:1fr 1fr!important;grid-template-areas:"account theme" "motion display" "network network"!important}.network-body-inner .settings-form-grid.one{grid-template-columns:1fr!important}}
+    @media (max-width:760px){#settingsModal .settings-board{grid-template-columns:1fr!important;grid-template-areas:"account" "theme" "motion" "display" "network"!important}.settings-token-grid,.settings-form-grid.three{grid-template-columns:1fr!important}.font-apply-row{grid-template-columns:1fr!important}.settings-footer-actions{align-items:stretch!important;flex-direction:column!important}.settings-footer-left{width:100%!important}.network-body-inner .settings-form-grid.one{grid-template-columns:1fr!important}}
+
+
+    /* v0.30.0 final alignment + full accent pass */
+    body{
+      background:
+        radial-gradient(circle at 0% 0%, color-mix(in srgb,var(--a) 28%, transparent), transparent 34rem),
+        radial-gradient(circle at 100% 0%, color-mix(in srgb,var(--b) 22%, transparent), transparent 36rem),
+        radial-gradient(circle at 12% 84%, color-mix(in srgb,var(--c) 20%, transparent), transparent 38rem),
+        radial-gradient(circle at 82% 86%, color-mix(in srgb,var(--a) 14%, transparent), transparent 34rem),
+        linear-gradient(135deg, var(--bg), var(--bg2))!important;
+    }
+    [data-theme="light"] body{
+      background:
+        radial-gradient(circle at 0% 0%, color-mix(in srgb,var(--a) 18%, transparent), transparent 34rem),
+        radial-gradient(circle at 100% 0%, color-mix(in srgb,var(--b) 15%, transparent), transparent 36rem),
+        radial-gradient(circle at 12% 84%, color-mix(in srgb,var(--c) 13%, transparent), transparent 38rem),
+        radial-gradient(circle at 82% 86%, color-mix(in srgb,var(--a) 9%, transparent), transparent 34rem),
+        linear-gradient(135deg, var(--bg), var(--bg2))!important;
+    }
+    body:before{background:radial-gradient(circle,color-mix(in srgb,var(--a) 42%, transparent),transparent 64%)!important;opacity:.36!important;}
+    body:after{background:radial-gradient(circle,color-mix(in srgb,var(--b) 28%, transparent),color-mix(in srgb,var(--c) 18%, transparent),transparent 68%)!important;opacity:.34!important;}
+    .side,.main,.modal-card,.drawer{border-color:color-mix(in srgb,var(--a) 18%, var(--line))!important;}
+    .stat,.pill,.btn,.select-trigger,.search input{border-color:color-mix(in srgb,var(--a) 16%, var(--line))!important;}
+    .tag-chip.my-tag,.tag-chip.public-tag,.tag-chip{border-color:color-mix(in srgb,var(--a) 30%, var(--line))!important;background:color-mix(in srgb,var(--a) 8%, rgba(255,255,255,.05))!important;}
+    .tag-chip.public-tag{border-color:color-mix(in srgb,var(--c) 34%, var(--line))!important;background:color-mix(in srgb,var(--c) 8%, rgba(255,255,255,.05))!important;}
+    .tag-chip.tag-filter-btn:hover,.tag-chip.active{background:linear-gradient(135deg,color-mix(in srgb,var(--a) 18%, transparent),color-mix(in srgb,var(--b) 13%, transparent))!important;border-color:color-mix(in srgb,var(--a) 48%, transparent)!important;color:var(--text)!important;box-shadow:0 10px 24px color-mix(in srgb,var(--a) 14%, transparent)!important;}
+    .tag-chip.active.public-tag{background:linear-gradient(135deg,color-mix(in srgb,var(--c) 18%, transparent),color-mix(in srgb,var(--b) 13%, transparent))!important;border-color:color-mix(in srgb,var(--c) 48%, transparent)!important;}
+    #syncBtn.btn.primary{background:color-mix(in srgb,var(--b) 13%, transparent)!important;border-color:color-mix(in srgb,var(--b) 32%, transparent)!important;color:var(--text)!important;box-shadow:none!important;}
+    #syncBtn.btn.primary:hover{background:color-mix(in srgb,var(--b) 18%, transparent)!important;border-color:color-mix(in srgb,var(--b) 44%, transparent)!important;}
+
+    /* settings: compact landscape, aligned fields, no escaping save button */
+    #settingsModal .settings-card{
+      width:min(1260px,calc(100vw - 42px))!important;
+      height:min(700px,calc(100vh - 42px))!important;
+      max-height:calc(100vh - 42px)!important;
+      padding:20px 22px 16px!important;
+      overflow:hidden!important;
+      display:flex!important;
+      flex-direction:column!important;
+      aspect-ratio:16/9!important;
+    }
+    #settingsModal .settings-head{margin-bottom:12px!important;}
+    #settingsModal .settings-head h2{font-size:24px!important;}
+    #settingsModal .settings-head p{font-size:12.5px!important;line-height:1.45!important;max-width:900px!important;}
+    #settingsModal .settings-board{
+      flex:1 1 auto!important;
+      min-height:0!important;
+      overflow:auto!important;
+      padding:0 3px 2px 0!important;
+      display:grid!important;
+      grid-template-columns:420px minmax(370px,1fr) 330px!important;
+      grid-template-rows:auto auto!important;
+      grid-template-areas:"account theme motion" "display network network"!important;
+      gap:14px!important;
+      align-content:start!important;
+      align-items:start!important;
+    }
+    #settingsModal .settings-panel{align-self:start!important;min-height:0!important;height:auto!important;padding:14px!important;border:var(--ui-border-width) solid var(--line)!important;background:rgba(255,255,255,.052)!important;}
+    #settingsModal .settings-panel.account{grid-area:account!important;}
+    #settingsModal .settings-panel.theme{grid-area:theme!important;}
+    #settingsModal .settings-panel.motion{grid-area:motion!important;}
+    #settingsModal .settings-panel.display{grid-area:display!important;}
+    #settingsModal .settings-panel.network-panel{grid-area:network!important;padding:0!important;border:0!important;background:transparent!important;}
+    #settingsModal .settings-panel h3{margin:0 0 10px!important;font-size:14px!important;line-height:1.2!important;}
+    #settingsModal .settings-token-grid{display:grid!important;grid-template-columns:minmax(0,1fr) 180px!important;gap:12px!important;align-items:start!important;}
+    #settingsModal .settings-panel textarea#tokenInput{height:92px!important;min-height:92px!important;resize:none!important;}
+    #settingsModal #usernameInput,#settingsModal #recentMonthsInput{width:100%!important;max-width:180px!important;}
+    #settingsModal .token-actions{margin-top:8px!important;display:flex!important;gap:8px!important;}
+    #settingsModal .token-actions .btn{height:36px!important;min-width:0!important;flex:1 1 0!important;}
+    #settingsModal .remember-row{margin-top:8px!important;display:flex!important;align-items:center!important;gap:8px!important;}
+    #settingsModal .checkbox-row{display:inline-flex!important;align-items:center!important;gap:7px!important;min-height:0!important;padding:0!important;border:0!important;background:transparent!important;border-radius:0!important;color:var(--soft)!important;line-height:1.2!important;box-shadow:none!important;}
+    #settingsModal .checkbox-row input{width:14px!important;height:14px!important;min-height:14px!important;margin:0!important;accent-color:var(--a)!important;}
+    #settingsModal .checkbox-row span{white-space:nowrap!important;}
+    #settingsModal .remember-row .help{margin:0!important;font-size:11.5px!important;line-height:1.35!important;}
+    #settingsModal .settings-form-grid.three{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:10px!important;align-items:start!important;}
+    #settingsModal .settings-panel.display .field,#settingsModal .network-body-inner .field{display:grid!important;grid-template-rows:18px 42px auto!important;gap:7px!important;margin:0!important;align-content:start!important;}
+    #settingsModal .settings-panel.display .field label,#settingsModal .network-body-inner .field label{height:18px!important;min-height:18px!important;margin:0!important;line-height:18px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;}
+    #settingsModal .settings-panel.display input,#settingsModal .network-body-inner input{height:42px!important;min-height:42px!important;margin:0!important;}
+    #settingsModal .network-body-inner .field .help{margin:0!important;min-height:30px!important;line-height:1.35!important;font-size:11.5px!important;}
+    #settingsModal .settings-panel.display .setting-help{margin-top:8px!important;line-height:1.35!important;}
+    #settingsModal .setting-title{margin:0 0 8px!important;font-size:13px!important;}
+    #settingsModal .setting-title:not(:first-child){margin-top:11px!important;}
+    #settingsModal .segmented{gap:7px!important;}
+    #settingsModal .segmented button{min-height:34px!important;padding:7px 10px!important;}
+    #settingsModal .network-settings summary{padding:12px 14px!important;border:var(--ui-border-width) solid var(--line)!important;border-radius:18px!important;background:rgba(255,255,255,.06)!important;}
+    #settingsModal .network-body{display:block!important;max-height:0!important;overflow:hidden!important;opacity:0!important;transform:translateY(-6px)!important;transition:max-height .32s cubic-bezier(.22,1,.36,1),opacity .22s ease,transform .22s ease!important;}
+    #settingsModal .network-settings[open] .network-body{max-height:330px!important;opacity:1!important;transform:translateY(0)!important;}
+    #settingsModal .network-body-inner{padding:10px 0 0!important;border:0!important;background:transparent!important;}
+    #settingsModal .network-body-inner .settings-form-grid.one{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:10px!important;align-items:start!important;}
+    #settingsModal .network-check{margin-top:10px!important;}
+    #settingsModal .network-warning{margin-top:8px!important;font-size:11.5px!important;line-height:1.42!important;}
+    #settingsModal .settings-footer-actions{margin-top:12px!important;display:flex!important;align-items:center!important;justify-content:space-between!important;gap:12px!important;flex:0 0 auto!important;}
+    #settingsModal .settings-footer-left{display:flex!important;align-items:center!important;gap:10px!important;min-width:0!important;flex:1!important;font-size:12px!important;}
+    #settingsModal .settings-foot-link,#settingsModal .settings-foot-link-bgm{width:36px!important;height:36px!important;border-radius:13px!important;color:var(--soft)!important;background:rgba(255,255,255,.055)!important;border:var(--ui-border-width) solid var(--line)!important;}
+    #settingsModal .settings-foot-link:hover,#settingsModal .settings-foot-link-bgm:hover{color:var(--text)!important;border-color:var(--accent-line)!important;background:rgba(255,255,255,.09)!important;}
+    #settingsModal .settings-foot-link svg{width:23px!important;height:23px!important;display:block!important;fill:currentColor!important;}
+    #settingsModal .settings-foot-link-bgm svg{width:24px!important;height:24px!important;}
+    #settingsModal .settings-footer-left .local-note{white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;}
+    #settingsModal .settings-footer-actions .btn{min-width:132px!important;flex:none!important;}
+    @media (max-width:1180px){#settingsModal .settings-card{width:calc(100vw - 16px)!important;height:auto!important;max-height:calc(100vh - 16px)!important;overflow:auto!important;aspect-ratio:auto!important}#settingsModal .settings-board{grid-template-columns:1fr 1fr!important;grid-template-areas:"account theme" "motion display" "network network"!important;overflow:visible!important}#settingsModal .settings-token-grid,#settingsModal .network-body-inner .settings-form-grid.one{grid-template-columns:1fr!important}#settingsModal #usernameInput,#settingsModal #recentMonthsInput{max-width:none!important}}
+    @media (max-width:760px){#settingsModal .settings-board{grid-template-columns:1fr!important;grid-template-areas:"account" "theme" "motion" "display" "network"!important}.settings-footer-actions{align-items:stretch!important;flex-direction:column!important}.settings-footer-left{width:100%!important}}
+
+  
+
+    /* v0.30.0 visual fix pass: settings alignment, network accordion flow, accent gradients */
+    body{
+      background:
+        radial-gradient(circle at 8% 0%, color-mix(in srgb,var(--a) 22%, transparent), transparent 30rem),
+        radial-gradient(circle at 96% 4%, color-mix(in srgb,var(--b) 20%, transparent), transparent 32rem),
+        radial-gradient(circle at 0% 88%, color-mix(in srgb,var(--c) 18%, transparent), transparent 30rem),
+        radial-gradient(circle at 92% 92%, color-mix(in srgb,var(--a) 16%, transparent), transparent 34rem),
+        radial-gradient(circle at 50% 58%, color-mix(in srgb,var(--b) 10%, transparent), transparent 38rem),
+        linear-gradient(135deg, var(--bg), var(--bg2))!important;
+    }
+    [data-theme="light"] body{
+      background:
+        radial-gradient(circle at 8% 0%, color-mix(in srgb,var(--a) 12%, transparent), transparent 30rem),
+        radial-gradient(circle at 96% 4%, color-mix(in srgb,var(--b) 11%, transparent), transparent 32rem),
+        radial-gradient(circle at 0% 88%, color-mix(in srgb,var(--c) 10%, transparent), transparent 30rem),
+        radial-gradient(circle at 92% 92%, color-mix(in srgb,var(--a) 8%, transparent), transparent 34rem),
+        radial-gradient(circle at 50% 58%, color-mix(in srgb,var(--b) 6%, transparent), transparent 38rem),
+        linear-gradient(135deg, var(--bg), var(--bg2))!important;
+    }
+    .side,.main,.drawer,.modal-card,.settings-panel,.info-card{
+      border-color:color-mix(in srgb,var(--a) 18%, var(--line))!important;
+    }
+    .tag-chip.my-tag{border-color:color-mix(in srgb,var(--a) 34%, transparent)!important;background:color-mix(in srgb,var(--a) 8%, transparent)!important;}
+    .tag-chip.public-tag{border-color:color-mix(in srgb,var(--c) 34%, transparent)!important;background:color-mix(in srgb,var(--c) 8%, transparent)!important;}
+    .tag-chip:hover{border-color:var(--accent-line)!important;background:linear-gradient(135deg,var(--accent-bg),color-mix(in srgb,var(--c) 10%, transparent))!important;}
+    .tag-chip.active,.tag-chip.my-tag.active,.tag-chip.public-tag.active{
+      border-color:var(--accent-line)!important;
+      background:linear-gradient(135deg,color-mix(in srgb,var(--a) 18%, transparent),color-mix(in srgb,var(--b) 14%, transparent))!important;
+      box-shadow:0 10px 24px color-mix(in srgb,var(--a) 12%, transparent)!important;
+    }
+    #filterSummary,.sync-explain{border-color:color-mix(in srgb,var(--a) 28%, transparent)!important;background:color-mix(in srgb,var(--a) 8%, transparent)!important;}
+
+    #settingsModal .settings-card{
+      width:min(1320px,calc(100vw - 40px))!important;
+      height:min(740px,calc(100vh - 40px))!important;
+      max-height:calc(100vh - 40px)!important;
+      padding:22px 24px 18px!important;
+      overflow:hidden!important;
+      display:flex!important;
+      flex-direction:column!important;
+    }
+    #settingsModal .settings-head{margin-bottom:14px!important;flex:0 0 auto!important;}
+    #settingsModal .settings-board{
+      flex:1 1 auto!important;
+      min-height:0!important;
+      overflow-y:auto!important;
+      overflow-x:hidden!important;
+      padding:0 8px 6px 0!important;
+      display:grid!important;
+      grid-template-columns:minmax(430px,1.08fr) minmax(410px,1fr) minmax(340px,.84fr)!important;
+      grid-template-areas:
+        "account theme motion"
+        "display network network"!important;
+      grid-template-rows:max-content max-content!important;
+      gap:18px 14px!important;
+      align-items:start!important;
+      scrollbar-gutter:stable!important;
+    }
+    #settingsModal .settings-column{display:contents!important;}
+    #settingsModal .settings-panel{box-sizing:border-box!important;height:auto!important;min-height:0!important;align-self:start!important;}
+    #settingsModal .settings-panel.account{grid-area:account!important;}
+    #settingsModal .settings-panel.theme{grid-area:theme!important;}
+    #settingsModal .settings-panel.motion{grid-area:motion!important;}
+    #settingsModal .settings-panel.display{grid-area:display!important;}
+    #settingsModal .settings-panel.network-panel{grid-area:network!important;margin-top:0!important;padding:0!important;border:0!important;background:transparent!important;}
+
+    #settingsModal .settings-token-grid{
+      grid-template-columns:minmax(240px,1fr) minmax(150px,190px)!important;
+      gap:12px!important;
+      align-items:start!important;
+    }
+    #settingsModal .settings-panel textarea#tokenInput{height:88px!important;min-height:88px!important;}
+    #settingsModal .token-actions{margin-top:8px!important;}
+    #settingsModal .checkbox-row{
+      display:inline-flex!important;
+      align-items:center!important;
+      gap:7px!important;
+      min-height:22px!important;
+      padding:0!important;
+      border:0!important;
+      border-radius:0!important;
+      background:transparent!important;
+      box-shadow:none!important;
+      color:var(--soft)!important;
+      cursor:pointer!important;
+    }
+    #settingsModal .checkbox-row input{width:14px!important;height:14px!important;min-height:14px!important;margin:0!important;}
+    #settingsModal .remember-row{margin-top:8px!important;}
+
+    #settingsModal .settings-panel .field label{height:18px!important;min-height:18px!important;line-height:18px!important;margin:0 0 7px!important;}
+    #settingsModal .settings-panel input,#settingsModal .settings-panel textarea{height:42px!important;min-height:42px!important;}
+    #settingsModal .settings-form-grid.three{gap:10px!important;}
+    #settingsModal .settings-field-even{display:grid!important;grid-template-rows:18px 42px;gap:7px!important;align-items:start!important;}
+    #settingsModal .settings-field-even label{height:18px!important;line-height:18px!important;margin:0!important;}
+    #settingsModal .settings-field-even input{height:42px!important;min-height:42px!important;}
+    #settingsModal .display .setting-help{margin-top:9px!important;}
+
+    #settingsModal .network-settings{display:block!important;position:relative!important;z-index:1!important;}
+    #settingsModal .network-settings summary{
+      position:relative!important;
+      z-index:2!important;
+      padding:12px 14px!important;
+      border:var(--ui-border-width) solid var(--line)!important;
+      border-radius:18px!important;
+      background:rgba(255,255,255,.06)!important;
+      box-shadow:none!important;
+    }
+    #settingsModal .network-body{
+      display:block!important;
+      max-height:0!important;
+      opacity:0!important;
+      overflow:hidden!important;
+      transform:translateY(-4px)!important;
+      transition:max-height .32s cubic-bezier(.22,1,.36,1), opacity .22s ease, transform .22s ease!important;
+      position:relative!important;
+      z-index:1!important;
+    }
+    #settingsModal .network-settings[open] .network-body{max-height:360px!important;opacity:1!important;transform:translateY(0)!important;}
+    #settingsModal .network-body-inner{padding:12px 0 0!important;border:0!important;background:transparent!important;overflow:visible!important;}
+    #settingsModal .network-body-inner .settings-form-grid.one{
+      display:grid!important;
+      grid-template-columns:repeat(3,minmax(0,1fr))!important;
+      gap:10px!important;
+      align-items:start!important;
+    }
+    #settingsModal .network-body-inner .field{
+      display:grid!important;
+      grid-template-rows:18px 42px 34px!important;
+      gap:7px!important;
+      margin:0!important;
+      align-items:start!important;
+    }
+    #settingsModal .network-body-inner .field label{height:18px!important;line-height:18px!important;margin:0!important;}
+    #settingsModal .network-body-inner .field input{height:42px!important;min-height:42px!important;}
+    #settingsModal .network-body-inner .field .help{min-height:34px!important;margin:0!important;line-height:1.42!important;}
+    #settingsModal .network-check{margin-top:9px!important;}
+    #settingsModal .network-warning{margin-top:8px!important;}
+
+    #settingsModal .accent-buttons button{
+      display:inline-flex!important;
+      align-items:center!important;
+      gap:7px!important;
+      padding-left:10px!important;
+    }
+    #settingsModal .accent-buttons button::before{
+      position:static!important;
+      transform:none!important;
+      flex:0 0 auto!important;
+      width:11px!important;
+      height:11px!important;
+      margin:0!important;
+    }
+
+    #settingsModal .settings-footer-actions{flex:0 0 auto!important;margin-top:12px!important;}
+    #settingsModal .settings-foot-link,#settingsModal .settings-foot-link-bgm{color:var(--soft)!important;background:rgba(255,255,255,.055)!important;}
+    #settingsModal .settings-foot-link-bgm svg{width:23px!important;height:23px!important;}
+    #settingsModal .settings-foot-link:hover,#settingsModal .settings-foot-link-bgm:hover{color:var(--text)!important;border-color:var(--accent-line)!important;}
+
+    @media (max-width:1180px){
+      #settingsModal .settings-card{height:calc(100vh - 16px)!important;width:calc(100vw - 16px)!important;}
+      #settingsModal .settings-board{grid-template-columns:1fr 1fr!important;grid-template-areas:"account theme" "motion display" "network network"!important;}
+      #settingsModal .settings-token-grid{grid-template-columns:1fr!important;}
+      #settingsModal .network-body-inner .settings-form-grid.one{grid-template-columns:1fr!important;}
+    }
+    @media (max-width:760px){
+      #settingsModal .settings-board{grid-template-columns:1fr!important;grid-template-areas:"account" "theme" "motion" "display" "network"!important;}
+      #settingsModal .settings-form-grid.three{grid-template-columns:1fr!important;}
+    }
+
+  
+
+    /* v0.30.0 release polish: distinct tag types + final settings alignment */
+    :root{--tag-my:#ff7eb6;--tag-public:#38bdf8;}
+    .tag-chip.my-tag{
+      border-color:color-mix(in srgb,var(--tag-my) 56%, transparent)!important;
+      background:linear-gradient(135deg,color-mix(in srgb,var(--tag-my) 16%, transparent),color-mix(in srgb,var(--tag-my) 7%, transparent))!important;
+      color:color-mix(in srgb,var(--tag-my) 24%, var(--text))!important;
+    }
+    .tag-chip.public-tag{
+      border-color:color-mix(in srgb,var(--tag-public) 62%, transparent)!important;
+      background:linear-gradient(135deg,color-mix(in srgb,var(--tag-public) 17%, transparent),color-mix(in srgb,var(--tag-public) 7%, transparent))!important;
+      color:color-mix(in srgb,var(--tag-public) 26%, var(--text))!important;
+    }
+    .tag-chip.my-tag .tag-kind{color:color-mix(in srgb,var(--tag-my) 62%, var(--muted))!important;opacity:1!important;}
+    .tag-chip.public-tag .tag-kind{color:color-mix(in srgb,var(--tag-public) 66%, var(--muted))!important;opacity:1!important;}
+    .tag-chip.my-tag:hover{
+      border-color:color-mix(in srgb,var(--tag-my) 78%, transparent)!important;
+      background:linear-gradient(135deg,color-mix(in srgb,var(--tag-my) 23%, transparent),color-mix(in srgb,var(--tag-my) 10%, transparent))!important;
+      box-shadow:0 10px 24px color-mix(in srgb,var(--tag-my) 13%, transparent)!important;
+    }
+    .tag-chip.public-tag:hover{
+      border-color:color-mix(in srgb,var(--tag-public) 82%, transparent)!important;
+      background:linear-gradient(135deg,color-mix(in srgb,var(--tag-public) 24%, transparent),color-mix(in srgb,var(--tag-public) 10%, transparent))!important;
+      box-shadow:0 10px 24px color-mix(in srgb,var(--tag-public) 14%, transparent)!important;
+    }
+    .tag-chip.my-tag.active{
+      border-color:color-mix(in srgb,var(--tag-my) 88%, transparent)!important;
+      background:linear-gradient(135deg,color-mix(in srgb,var(--tag-my) 34%, transparent),color-mix(in srgb,var(--tag-my) 16%, transparent))!important;
+      box-shadow:0 12px 26px color-mix(in srgb,var(--tag-my) 18%, transparent)!important;
+      color:var(--text)!important;
+    }
+    .tag-chip.public-tag.active{
+      border-color:color-mix(in srgb,var(--tag-public) 90%, transparent)!important;
+      background:linear-gradient(135deg,color-mix(in srgb,var(--tag-public) 35%, transparent),color-mix(in srgb,var(--tag-public) 16%, transparent))!important;
+      box-shadow:0 12px 26px color-mix(in srgb,var(--tag-public) 18%, transparent)!important;
+      color:var(--text)!important;
+    }
+    #settingsModal .network-body-inner .settings-form-grid.one{
+      display:grid!important;
+      grid-template-columns:repeat(3,minmax(0,1fr))!important;
+      gap:10px!important;
+      align-items:start!important;
+      padding-top:0!important;
+    }
+    #settingsModal .network-body-inner .settings-form-grid.one > .field{
+      display:grid!important;
+      grid-template-rows:18px 42px 34px!important;
+      row-gap:7px!important;
+      align-items:start!important;
+      align-content:start!important;
+      margin:0!important;
+      padding:0!important;
+      min-height:101px!important;
+      height:101px!important;
+      box-sizing:border-box!important;
+    }
+    #settingsModal .network-body-inner .settings-form-grid.one > .field label{
+      height:18px!important;
+      min-height:18px!important;
+      line-height:18px!important;
+      margin:0!important;
+      padding:0!important;
+      display:block!important;
+      overflow:hidden!important;
+      text-overflow:ellipsis!important;
+      white-space:nowrap!important;
+    }
+    #settingsModal .network-body-inner .settings-form-grid.one > .field input,
+    #settingsModal #apiBaseInput,
+    #settingsModal #imageProxyBaseInput,
+    #settingsModal #siteBaseInput{
+      height:42px!important;
+      min-height:42px!important;
+      max-height:42px!important;
+      line-height:20px!important;
+      padding:10px 14px!important;
+      margin:0!important;
+      transform:none!important;
+      align-self:start!important;
+      box-sizing:border-box!important;
+      display:block!important;
+      width:100%!important;
+    }
+    #settingsModal .network-body-inner .settings-form-grid.one > .field .help{
+      height:34px!important;
+      min-height:34px!important;
+      max-height:34px!important;
+      overflow:hidden!important;
+      line-height:17px!important;
+      margin:0!important;
+      padding:0!important;
+      display:block!important;
+      align-self:start!important;
+    }
+    @media (max-width:1180px){#settingsModal .network-body-inner .settings-form-grid.one{grid-template-columns:1fr!important}#settingsModal .network-body-inner .settings-form-grid.one > .field{height:auto!important;min-height:0!important;grid-template-rows:18px 42px auto!important}}
+
+  </style>
 </head>
 <body>
   <div class="app" id="appRoot">
     <aside class="side">
       <div class="brand">
-        <a class="bangumi-logo" href="https://bgm.tv" target="_blank" rel="noopener" title="Bangumi 番组计划">
+        <a class="bangumi-logo" id="bangumiLogoLink" href="https://bgm.tv" target="_blank" rel="noopener" title="Bangumi 番组计划">
           <svg viewBox="0 0 1024 1024" fill="#FF6CB8" aria-label="Bangumi" role="img"><path d="M228.115268 615.399298a12.300795 12.300795 0 0 0 11.35458 7.569719 12.471113 12.471113 0 0 0 4.749999-0.965139l147.609537-61.882459a12.300795 12.300795 0 0 0 0.26494-22.557765l-147.609537-66.235049a12.300795 12.300795 0 1 0-10.067727 22.444219l121.740019 54.634453-121.456155 50.906366a12.300795 12.300795 0 0 0-6.585656 16.085655zM399.020617 627.965033H239.469848a12.300795 12.300795 0 0 0 0 24.601589h159.550769a12.300795 12.300795 0 0 0 0-24.601589zM399.020617 667.460046H239.469848a12.300795 12.300795 0 0 0 0 24.601589h159.550769a12.300795 12.300795 0 0 0 0-24.601589zM872.941851 476.892349l-133.283841 58.381464a12.300795 12.300795 0 0 0-0.397411 22.349598l133.302766 64.058754a12.073703 12.073703 0 0 0 5.317729 1.23008 12.300795 12.300795 0 0 0 5.336652-23.390435l-109.15536-52.42031L882.896033 499.469038a12.300795 12.300795 0 1 0-9.954182-22.576689zM877.881094 627.965033h-148.101569a12.300795 12.300795 0 0 0 0 24.601589h148.101569a12.300795 12.300795 0 0 0 0-24.601589zM877.881094 667.460046h-148.101569a12.300795 12.300795 0 0 0 0 24.601589h148.101569a12.300795 12.300795 0 0 0 0-24.601589zM644.866193 537.128395h-162.919295a12.28187 12.28187 0 0 0-10.711153 18.318722l81.374488 145.130453a12.300795 12.300795 0 0 0 21.460155 0l81.374489-145.130453a12.300795 12.300795 0 0 0-10.730078-18.318722z m-81.374488 132.299778l-60.444213-107.698189h120.888426z"></path><path d="M891.411968 334.960102H648.405037c-6.812748-15.13944-19.813742-28.386449-36.864535-38.018917L803.092262 19.283861a12.300795 12.300795 0 0 0-20.249001-13.966133L588.566402 286.873457a147.723082 147.723082 0 0 0-45.418319-7.001991 151.507942 151.507942 0 0 0-31.887445 3.368526L239.980804 4.712151A12.300795 12.300795 0 0 0 222.437978 21.87649l262.726051 269.803739c-22.14143 9.821711-39.116527 25.112546-47.310749 43.242025H132.547555A91.763929 91.763929 0 0 0 40.764702 426.705107v414.44216A91.763929 91.763929 0 0 0 132.547555 932.967969h268.024855l-19.908363 46.989036c-12.641432 29.881469 22.614538 57.094612 48.294812 37.299794L538.473781 932.967969h352.938187a91.763929 91.763929 0 0 0 91.782853-91.782853v-414.442161a91.763929 91.763929 0 0 0-91.782853-91.782853z m34.839635 463.815658a60.709153 60.709153 0 0 1-60.709153 60.709153H585.670984L487.870204 932.967969l-77.002975 57.851583 24.412346-57.851583 31.016927-73.483056H198.082405A60.728077 60.728077 0 0 1 137.27863 798.737912V440.330602a60.728077 60.728077 0 0 1 60.728077-60.728077h667.460046a60.709153 60.709153 0 0 1 60.709153 60.728077z"></path></svg>
         </a>
         <div><h1>Bangumi 保管库</h1><p>本地收藏备份</p></div>
@@ -635,36 +1376,99 @@
   <div class="drawer-mask" id="drawerMask"></div>
   <section class="drawer" id="drawer"></section>
 
+
   <div class="modal-mask" id="settingsModal">
     <div class="modal-card settings-card">
-      <div class="row"><h2 style="margin:0">设置与登录</h2><div class="grow"></div><button class="btn small" data-close="settingsModal">关闭</button></div>
-      <p class="help">当前版本是单文件网页应用：不用 Python、不用命令行，双击这个 HTML 就能打开。日常“同步最近”只扫描最近自定义月份内更新的收藏；“完整同步”才会核对全部条目并检查疑似消失。</p>
-      <div class="split">
-        <div class="field"><label>Access Token</label><textarea id="tokenInput" rows="4" placeholder="粘贴 Bangumi Access Token。默认不会保存，除非勾选下面的记住。"></textarea></div>
-        <div class="field"><label>用户名</label><input id="usernameInput" placeholder="可留空，点击测试登录自动读取" /><div class="help">用户名用于读取 /v0/users/{username}/collections。</div></div>
+      <div class="settings-head">
+        <div>
+          <h2>设置与登录</h2>
+          <p>账号、同步、外观与网络端点集中管理。默认使用官方 API；第三方反代请只填自己信任或自己部署的服务。</p>
+        </div>
+        <div class="grow"></div>
+        <button class="btn small" data-close="settingsModal">关闭</button>
       </div>
-      <div class="field" style="max-width:280px"><label>最近同步范围（月）</label><input id="recentMonthsInput" type="number" min="1" max="120" step="1" placeholder="例如 3" /><div class="help">日常同步会从每个分类/状态读取最近 N 个月更新的条目，减少 API 请求。</div></div>
-      <div class="settings-grid split">
-        <div class="setting-card"><div class="setting-title">主题模式</div><div class="segmented" data-segment="themeMode"><button data-value="dark">深色</button><button data-value="light">浅色</button><button data-value="system">跟随系统</button></div><div class="setting-help">点击切换时会用扩散动画过渡；跟随系统会随系统明暗变化。</div></div>
-        <div class="setting-card"><div class="setting-title">字体风格</div><div class="segmented" data-segment="fontFamily"><button data-value="system">系统默认</button><button data-value="rounded">圆润</button><button data-value="jp">日系</button><button data-value="wenkai">文楷</button><button data-value="mono">等宽</button></div><div class="setting-help">使用本机已安装字体；没有对应字体时自动回退。</div></div>
-        <div class="setting-card"><div class="setting-title">海报卡片</div><div class="segmented" data-segment="cardSize"><button data-value="compact">紧凑</button><button data-value="standard">标准</button><button data-value="large">大卡</button></div><div class="setting-help">卡片文字区固定高度，悬停时弹起展开，不再把整行撑乱。</div></div>
-        <div class="setting-card"><div class="setting-title">动效强度</div><div class="segmented" data-segment="motion"><button data-value="full">完整</button><button data-value="soft">轻量</button><button data-value="off">关闭</button></div><div class="setting-help">页面卡顿时可改成轻量或关闭；不会影响备份数据。</div></div>
+
+      <div class="settings-board">
+        <section class="settings-panel account">
+          <h3>账号与同步</h3>
+          <div class="settings-token-grid">
+            <div class="field token-field">
+              <label>Access Token</label>
+              <textarea id="tokenInput" rows="5" placeholder="粘贴 Bangumi Access Token。默认只保存在当前会话。"></textarea>
+              <div class="token-actions"><button class="btn small" id="openTokenBtn">获取 Token</button><button class="btn small good" id="testLoginBtn">测试登录</button></div>
+            </div>
+            <div>
+              <div class="field"><label>用户名</label><input id="usernameInput" placeholder="留空时可自动读取" /></div>
+              <div class="field"><label>最近同步范围（月）</label><input id="recentMonthsInput" type="number" min="1" max="120" step="1" placeholder="3" /></div>
+              <div class="remember-row"><label class="checkbox-row"><input type="checkbox" id="rememberTokenInput" /> <span>记住 token</span></label><span class="help">不勾选时不写入本地资料库。</span></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="settings-panel display">
+          <h3>显示细节</h3>
+          <div class="settings-form-grid three">
+            <div class="field settings-field-even"><label>每次显示条数</label><input id="pageSizeInput" type="number" min="40" max="360" step="20" placeholder="120" /></div>
+            <div class="field settings-field-even"><label>吐槽预览行数</label><input id="commentLinesInput" type="number" min="0" max="6" step="1" placeholder="0" /></div>
+            <div class="field settings-field-even"><label>UI 白边粗细（px）</label><input id="borderWidthInput" type="number" min="0" max="4" step="0.5" placeholder="1" /></div>
+          </div>
+          <div class="setting-help">吐槽预览默认 0；详情页仍显示完整吐槽。</div>
+        </section>
+
+        <section class="settings-panel theme">
+          <h3>主题与字体</h3>
+          <div class="setting-title">主题模式</div>
+          <div class="segmented" data-segment="themeMode"><button data-value="system">跟随系统</button><button data-value="dark">深色</button><button data-value="light">浅色</button></div>
+          <div class="setting-title">字体风格</div>
+          <div class="segmented" data-segment="fontFamily"><button data-value="system">系统默认</button><button data-value="custom">自定义</button><button data-value="rounded">圆润</button><button data-value="jp">日系</button><button data-value="wenkai">文楷</button><button data-value="mono">等宽</button></div>
+          <div class="font-apply-row">
+            <div class="field"><label>自定义字体</label><input id="customFontInput" placeholder="例如：HarmonyOS Sans SC" /></div>
+            <button class="btn small" id="useCustomFontBtn">使用</button>
+          </div>
+          <div class="setting-help">填一个本机字体名；留空则使用所选字体风格。</div>
+        </section>
+
+        <section class="settings-panel motion">
+          <h3>卡片与动效</h3>
+          <div class="setting-title">海报卡片</div>
+          <div class="segmented" data-segment="cardSize"><button data-value="compact">紧凑</button><button data-value="standard">标准</button><button data-value="large">大卡</button></div>
+          <div class="setting-title">动效强度</div>
+          <div class="segmented" data-segment="motion"><button data-value="full">完整</button><button data-value="soft">轻量</button><button data-value="off">关闭</button></div>
+          <div class="setting-title">主题色</div>
+          <div class="segmented accent-buttons" data-segment="accentColor"><button data-value="sakura">樱粉</button><button data-value="violet">紫藤</button><button data-value="cyan">青蓝</button><button data-value="amber">暖黄</button><button data-value="mint">薄荷</button></div>
+          <div class="setting-help">轻量减少背景和悬停动画；关闭则尽量去掉动效。</div>
+        </section>
+
+        <section class="settings-panel network-panel">
+          <details class="network-settings">
+            <summary>高级网络设置：API / 图片反代 / 站点镜像</summary>
+            <div class="network-body"><div class="network-body-inner">
+              <div class="settings-form-grid one">
+                <div class="field"><label>API 地址</label><input id="apiBaseInput" placeholder="https://api.bgm.tv" /><div class="help">留空使用官方 API。例：https://bgmapi.anibt.net</div></div>
+                <div class="field"><label>图片反代地址</label><input id="imageProxyBaseInput" placeholder="留空，不改写图片地址" /><div class="help">例：https://bgmimg.anibt.net</div></div>
+                <div class="field"><label>Bangumi 站点地址</label><input id="siteBaseInput" placeholder="https://bgm.tv" /><div class="help">用于打开条目和标签。例：https://bgmmi.anibt.net</div></div>
+              </div>
+              <label class="checkbox-row network-check"><input type="checkbox" id="customApiPrivateInput" /> <span>登录和收藏同步也使用自定义 API</span></label>
+              <div class="network-warning">开启后 Access Token 会经过自定义 API。只建议使用自己部署或完全信任的反代；不开启时私有同步仍走官方 API。</div>
+            </div></div>
+          </details>
+        </section>
       </div>
-      <div class="number-grid" style="margin-top:12px">
-        <div class="field"><label>每次显示条数</label><input id="pageSizeInput" type="number" min="40" max="360" step="20" placeholder="例如 120" /><div class="help">越小越顺滑；越大越少点“再显示”。</div></div>
-        <div class="field"><label>卡片吐槽预览行数</label><input id="commentLinesInput" type="number" min="0" max="6" step="1" placeholder="例如 3" /><div class="help">设为 0 可基本隐藏预览，只在详情里看完整吐槽。</div></div>
-        <div class="field"><label>UI 白边粗细（px）</label><input id="borderWidthInput" type="number" min="0" max="4" step="0.5" placeholder="0 到 4" /><div class="help">控制卡片、弹窗、按钮等玻璃边框；设为 0 可关闭大部分白边。</div></div>
-      </div>
-      <label class="pill" style="cursor:pointer"><input type="checkbox" id="rememberTokenInput" /> 记住 token 在本机浏览器</label>
-      <div class="row" style="margin-top:14px">
-        <button class="btn" id="openTokenBtn">获取 Access Token</button>
-        <button class="btn good" id="testLoginBtn">测试登录</button>
+
+      <div class="settings-footer-actions">
+        <div class="settings-footer-left">
+          <div class="settings-link-row">
+            <a class="settings-foot-link" href="https://github.com/AKISATO57/AKI-Bangumi-Vault" target="_blank" rel="noopener" title="GitHub 仓库"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 .5a12 12 0 0 0-3.79 23.39c.6.11.82-.26.82-.58v-2.03c-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.09-.75.08-.73.08-.73 1.21.08 1.85 1.24 1.85 1.24 1.07 1.84 2.81 1.31 3.5 1 .11-.78.42-1.31.76-1.61-2.67-.3-5.47-1.34-5.47-5.95 0-1.31.47-2.38 1.24-3.22-.12-.3-.54-1.52.12-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 6.01 0c2.29-1.55 3.3-1.23 3.3-1.23.66 1.66.24 2.88.12 3.18.77.84 1.24 1.91 1.24 3.22 0 4.62-2.81 5.64-5.49 5.94.43.37.81 1.1.81 2.22v3.29c0 .32.22.69.83.57A12 12 0 0 0 12 .5Z"/></svg></a>
+            <a class="settings-foot-link settings-foot-link-bgm" href="https://bgm.tv/group/topic/462213" target="_blank" rel="noopener" title="Bangumi 主题帖"><svg viewBox="0 0 1024 1024" fill="currentColor" aria-label="Bangumi" role="img"><path d="M228.115268 615.399298a12.300795 12.300795 0 0 0 11.35458 7.569719 12.471113 12.471113 0 0 0 4.749999-0.965139l147.609537-61.882459a12.300795 12.300795 0 0 0 0.26494-22.557765l-147.609537-66.235049a12.300795 12.300795 0 1 0-10.067727 22.444219l121.740019 54.634453-121.456155 50.906366a12.300795 12.300795 0 0 0-6.585656 16.085655zM399.020617 627.965033H239.469848a12.300795 12.300795 0 0 0 0 24.601589h159.550769a12.300795 12.300795 0 0 0 0-24.601589zM399.020617 667.460046H239.469848a12.300795 12.300795 0 0 0 0 24.601589h159.550769a12.300795 12.300795 0 0 0 0-24.601589zM872.941851 476.892349l-133.283841 58.381464a12.300795 12.300795 0 0 0-0.397411 22.349598l133.302766 64.058754a12.073703 12.073703 0 0 0 5.317729 1.23008 12.300795 12.300795 0 0 0 5.336652-23.390435l-109.15536-52.42031L882.896033 499.469038a12.300795 12.300795 0 1 0-9.954182-22.576689zM877.881094 627.965033h-148.101569a12.300795 12.300795 0 0 0 0 24.601589h148.101569a12.300795 12.300795 0 0 0 0-24.601589zM877.881094 667.460046h-148.101569a12.300795 12.300795 0 0 0 0 24.601589h148.101569a12.300795 12.300795 0 0 0 0-24.601589zM644.866193 537.128395h-162.919295a12.28187 12.28187 0 0 0-10.711153 18.318722l81.374488 145.130453a12.300795 12.300795 0 0 0 21.460155 0l81.374489-145.130453a12.300795 12.300795 0 0 0-10.730078-18.318722z m-81.374488 132.299778l-60.444213-107.698189h120.888426z"></path><path d="M891.411968 334.960102H648.405037c-6.812748-15.13944-19.813742-28.386449-36.864535-38.018917L803.092262 19.283861a12.300795 12.300795 0 0 0-20.249001-13.966133L588.566402 286.873457a147.723082 147.723082 0 0 0-45.418319-7.001991 151.507942 151.507942 0 0 0-31.887445 3.368526L239.980804 4.712151A12.300795 12.300795 0 0 0 222.437978 21.87649l262.726051 269.803739c-22.14143 9.821711-39.116527 25.112546-47.310749 43.242025H132.547555A91.763929 91.763929 0 0 0 40.764702 426.705107v414.44216A91.763929 91.763929 0 0 0 132.547555 932.967969h268.024855l-19.908363 46.989036c-12.641432 29.881469 22.614538 57.094612 48.294812 37.299794L538.473781 932.967969h352.938187a91.763929 91.763929 0 0 0 91.782853-91.782853v-414.442161a91.763929 91.763929 0 0 0-91.782853-91.782853z m34.839635 463.815658a60.709153 60.709153 0 0 1-60.709153 60.709153H585.670984L487.870204 932.967969l-77.002975 57.851583 24.412346-57.851583 31.016927-73.483056H198.082405A60.728077 60.728077 0 0 1 137.27863 798.737912V440.330602a60.728077 60.728077 0 0 1 60.728077-60.728077h667.460046a60.709153 60.709153 0 0 1 60.709153 60.728077z"></path></svg></a>
+          </div>
+          <span class="local-note">本地数据：资料库/收藏数据.json；封面缓存：资料库/封面缓存。</span>
+        </div>
         <button class="btn primary" id="saveSettingsBtn">保存设置</button>
       </div>
-      <div class="notice" style="margin-top:14px">安全建议：便携版启动时会把收藏库保存到 资料库/收藏数据.json，把封面保存到 资料库/封面缓存。token 只会发往 api.bgm.tv；不勾选“记住 token”时不会写入 收藏数据.json。</div>
-      <div class="sync-log" id="loginLog" style="margin-top:14px" aria-live="polite"></div>
+      <div class="sync-log" id="loginLog" aria-live="polite"></div>
     </div>
   </div>
+
 
   <div class="modal-mask" id="syncModal">
     <div class="modal-card">
@@ -678,16 +1482,20 @@
   <div class="modal-mask" id="exportModal">
     <div class="modal-card">
       <div class="row"><h2 style="margin:0">导出与导入</h2><div class="grow"></div><button class="btn small" data-close="exportModal">关闭</button></div>
-      <p class="help">完整 ZIP 包含 JSON、CSV、离线 HTML、Word、XLSX 表格、历史版本、同步记录与 images 封面目录。为避免大量 Base64 导致浏览器卡死，完整 ZIP 使用真实图片文件；请先解压 ZIP，再打开 offline-poster-wall.html。</p>
+      <div class="export-help-list">
+        <div><b>完整 ZIP</b>：推荐日常备份，包含收藏数据、历史、表格、文档、离线 HTML 和封面目录。</div>
+        <div><b>JSON</b>：用于恢复资料库；<b>CSV / XLSX</b>：用于表格软件；<b>DOCX</b>：用于阅读归档。</div>
+        <div><b>单文件 HTML</b> 适合少量条目分享预览；条目很多时建议导出完整 ZIP。</div>
+      </div>
       <div class="row">
-        <button class="btn primary" id="exportZipBtn">导出完整 ZIP（快速）</button>
+        <button class="btn primary" id="exportZipBtn">导出完整 ZIP</button>
         <button class="btn" id="exportJsonBtn">导出 JSON</button>
         <button class="btn" id="exportCsvBtn">导出 CSV</button>
-        <button class="btn" id="exportHtmlBtn">导出单文件 HTML（慢）</button>
+        <button class="btn" id="exportHtmlBtn">导出单文件 HTML</button>
         <button class="btn" id="exportDocxBtn">导出文档 .docx</button>
         <button class="btn" id="exportXlsxBtn">导出表格 .xlsx</button>
       </div>
-      <div class="notice" style="margin-top:14px">封面离线取决于是否已缓存。完整 ZIP 会把 资料库/封面缓存 里的封面作为 images/ 文件夹打包，速度更快、不会塞满 HTML；请解压后打开 offline-poster-wall.html。单文件 HTML 会把封面内嵌成 Base64，条目很多时会很慢，只建议少量条目使用。</div>
+      <div class="notice" style="margin-top:14px">导入会用 JSON 备份覆盖当前资料库。操作前请先导出完整 ZIP 或 JSON 留底。</div>
       <input type="file" id="importFile" accept="application/json,.json" class="hidden" />
     </div>
   </div>
@@ -697,14 +1505,24 @@
 <script>
 (() => {
   'use strict';
-  const API_BASE = 'https://api.bgm.tv';
+  const DEFAULT_API_BASE = 'https://api.bgm.tv';
+  const DEFAULT_SITE_BASE = 'https://bgm.tv';
   const TOKEN_URL = 'https://next.bgm.tv/demo/access-token';
   const SUBJECT_TYPES = [2,1,4,3,6];
   const COLLECTION_TYPES = [1,2,3,4,5];
   const STATUS = {0:'全部',1:'想看',2:'看过',3:'在看',4:'搁置',5:'抛弃',99:'安全箱'};
+  const STATUS_BY_TYPE = {
+    1:{0:'全部',1:'想读',2:'读过',3:'在读',4:'搁置',5:'抛弃',99:'安全箱'},
+    2:{0:'全部',1:'想看',2:'看过',3:'在看',4:'搁置',5:'抛弃',99:'安全箱'},
+    3:{0:'全部',1:'想听',2:'听过',3:'在听',4:'搁置',5:'抛弃',99:'安全箱'},
+    4:{0:'全部',1:'想玩',2:'玩过',3:'在玩',4:'搁置',5:'抛弃',99:'安全箱'},
+    6:{0:'全部',1:'想看',2:'看过',3:'在看',4:'搁置',5:'抛弃',99:'安全箱'}
+  };
+  function statusLabel(subjectType, collectionType){ const map = STATUS_BY_TYPE[Number(subjectType)] || STATUS; return map[Number(collectionType)] || STATUS[Number(collectionType)] || collectionType || '-'; }
+  function statusMapForNav(){ return filters.type ? (STATUS_BY_TYPE[Number(filters.type)] || STATUS) : STATUS; }
   const SUBJECT_LABEL = {1:'书籍',2:'动画',3:'音乐',4:'游戏',6:'三次元'};
   const BGM_TYPE_PATH = {1:'book',2:'anime',3:'music',4:'game',6:'real'};
-  const DEFAULT_STATE = {schema:9, settings:{username:'', token:'', rememberToken:false, theme:'dark', themeMode:'dark', recentMonths:3, fontFamily:'system', cardSize:'standard', pageSize:120, commentLines:3, motion:'full', borderWidth:1}, collections:{}, history:[], runs:[]};
+  const DEFAULT_STATE = {schema:13, settings:{username:'', token:'', rememberToken:false, theme:'system', themeMode:'system', recentMonths:3, fontFamily:'system', customFont:'', cardSize:'standard', pageSize:120, commentLines:0, motion:'full', accentColor:'sakura', borderWidth:1, apiBase:'', imageProxyBase:'', siteBase:'', customApiPrivate:false}, collections:{}, history:[], runs:[]};
   let state = structuredClone(DEFAULT_STATE);
   let filters = {status:0, tag:'全部', type:0, q:'', sort:'updated_desc'};
   let runtimeToken = '';
@@ -726,12 +1544,49 @@
     return Number.isFinite(n) ? Math.max(min, Math.min(max, n)) : fallback;
   }
   function pageSize(){ return clampNum(state.settings.pageSize, 40, 360, 120); }
+  function cleanBaseUrl(value, fallback=''){
+    const raw = String(value || '').trim();
+    if(!raw) return fallback;
+    try{ const u = new URL(raw); return (u.origin + u.pathname).replace(/\/+$/,''); }
+    catch{ return fallback; }
+  }
+  function apiBaseFor(isPrivate=false){
+    const custom = cleanBaseUrl(state.settings.apiBase, '');
+    if(isPrivate && custom && !state.settings.customApiPrivate) return DEFAULT_API_BASE;
+    return custom || DEFAULT_API_BASE;
+  }
+  function siteBase(){ return cleanBaseUrl(state.settings.siteBase, DEFAULT_SITE_BASE) || DEFAULT_SITE_BASE; }
+  function imageProxyBase(){ return cleanBaseUrl(state.settings.imageProxyBase, ''); }
+  function rewriteImageUrl(url){
+    const proxy = imageProxyBase();
+    if(!proxy || !url) return url || '';
+    try{
+      const u = new URL(url, DEFAULT_SITE_BASE);
+      if(!/(^|\.)bgm\.tv$/i.test(u.hostname) && !/(^|\.)bangumi\.tv$/i.test(u.hostname)) return url;
+      const p = new URL(proxy);
+      return (p.origin + p.pathname.replace(/\/+$/,'') + u.pathname + u.search).replace(/([^:]\/)\/+/g,'$1');
+    }catch{ return url; }
+  }
   function resetRenderLimit(){ renderLimit = pageSize(); }
   function effectiveTheme(){
     const mode = state.settings.themeMode || state.settings.theme || 'dark';
     if(mode === 'system') return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     return mode === 'light' ? 'light' : 'dark';
   }
+  const ACCENT_PRESETS = {
+    sakura: ['#ff7eb6','#f472b6','#fb7185'],
+    violet: ['#a78bfa','#8b5cf6','#c084fc'],
+    cyan: ['#38bdf8','#06b6d4','#60a5fa'],
+    amber: ['#fbbf24','#f59e0b','#fb7185'],
+    mint: ['#34d399','#10b981','#22d3ee']
+  };
+  const TAG_PAIR_PRESETS = {
+    sakura: ['#ff7eb6','#38bdf8'],
+    violet: ['#a78bfa','#34d399'],
+    cyan: ['#38bdf8','#f472b6'],
+    amber: ['#f59e0b','#06b6d4'],
+    mint: ['#10b981','#a78bfa']
+  };
   function applyAppearance(animate=false, ev=null){
     const update = () => {
       const root = document.documentElement;
@@ -739,9 +1594,16 @@
       root.dataset.theme = theme;
       root.dataset.themeMode = state.settings.themeMode || state.settings.theme || 'dark';
       root.dataset.font = state.settings.fontFamily || 'system';
+      if((state.settings.fontFamily || 'system') === 'custom' && String(state.settings.customFont || '').trim()) root.style.setProperty('--font-main', state.settings.customFont.trim()); else root.style.removeProperty('--font-main');
       root.dataset.cardSize = state.settings.cardSize || 'standard';
       root.dataset.motion = state.settings.motion || 'full';
-      root.style.setProperty('--comment-lines', String(clampNum(state.settings.commentLines, 0, 6, 3)));
+      const accentKey = state.settings.accentColor || 'sakura';
+      const accent = ACCENT_PRESETS[accentKey] || ACCENT_PRESETS.sakura;
+      const tagPair = TAG_PAIR_PRESETS[accentKey] || TAG_PAIR_PRESETS.sakura;
+      root.style.setProperty('--a', accent[0]); root.style.setProperty('--b', accent[1]); root.style.setProperty('--c', accent[2]);
+      root.style.setProperty('--tag-my', tagPair[0]);
+      root.style.setProperty('--tag-public', tagPair[1]);
+      root.style.setProperty('--comment-lines', String(clampNum(state.settings.commentLines, 0, 6, 0)));
       root.style.setProperty('--ui-border-width', clampNum(state.settings.borderWidth, 0, 4, 1) + 'px');
       root.dataset.borderZero = clampNum(state.settings.borderWidth, 0, 4, 1) === 0 ? 'true' : 'false';
       const btn = $('themeBtn');
@@ -775,7 +1637,8 @@
       group.querySelectorAll('button[data-value]').forEach(btn => btn.classList.toggle('active', String(btn.dataset.value) === value));
     });
     if($('pageSizeInput')) $('pageSizeInput').value = pageSize();
-    if($('commentLinesInput')) $('commentLinesInput').value = clampNum(state.settings.commentLines, 0, 6, 3);
+    if($('commentLinesInput')) $('commentLinesInput').value = clampNum(state.settings.commentLines, 0, 6, 0);
+    if($('customFontInput')) $('customFontInput').value = state.settings.customFont || '';
     if($('borderWidthInput')) $('borderWidthInput').value = clampNum(state.settings.borderWidth, 0, 4, 1);
   }
   function bindSegmentedControls(){
@@ -846,7 +1709,7 @@
     applyAppearance(false); resetRenderLimit();
   }
   function mergeState(loaded){
-    const settings = {...DEFAULT_STATE.settings, ...(loaded.settings||{})}; if(!settings.themeMode) settings.themeMode = settings.theme || 'dark'; return {schema:9, settings, collections:loaded.collections||{}, history:loaded.history||[], runs:loaded.runs||[]};
+    const settings = {...DEFAULT_STATE.settings, ...(loaded.settings||{})}; if(!settings.themeMode) settings.themeMode = settings.theme || 'system'; if((loaded.schema||0) < 11 && Number(settings.commentLines) === 3) settings.commentLines = 0; return {schema:12, settings, collections:loaded.collections||{}, history:loaded.history||[], runs:loaded.runs||[]};
   }
   async function saveState(){
     if(window.BANGUMI_VAULT_OFFLINE_STATE) return;
@@ -908,7 +1771,7 @@
   function bgmTagUrl(subjectType, name){
     const path = BGM_TYPE_PATH[Number(subjectType)] || 'subject_search';
     const q = encodeURIComponent(name || '');
-    return path === 'subject_search' ? `https://bgm.tv/subject_search/${q}?cat=all` : `https://bgm.tv/${path}/tag/${q}`;
+    return path === 'subject_search' ? `${siteBase()}/subject_search/${q}?cat=all` : `${siteBase()}/${path}/tag/${q}`;
   }
   function publicTagsForDisplay(c){ return publicTagsOf(c); }
   function shortValue(v, max=80){
@@ -918,7 +1781,7 @@
   function valuesSame(a,b){ return stableStringify(a ?? '') === stableStringify(b ?? ''); }
   function collectionFieldDiff(oldC, newC){
     const fields = [
-      ['collection_type','收藏状态', v => STATUS[v] || v || '-'],
+      ['collection_type','收藏状态', (v, item) => statusLabel(item?.subject_type, v)],
       ['rate','我的评分', v => v || '未评分'],
       ['ep_status','章节进度', v => v || '-'],
       ['vol_status','卷进度', v => v || '-'],
@@ -956,7 +1819,7 @@
       subject_id: Number(item.subject_id || s.id), subject_type:Number(st), collection_type:Number(ct),
       title, name:s.name||'', name_cn:s.name_cn||'', date:s.date||'', eps:s.eps ?? '', volumes:s.volumes ?? '',
       bgm_score: s.score ?? s.rating?.score ?? '', rank: s.rank ?? '',
-      summary:s.summary||'', image: imgs.large || imgs.common || imgs.medium || imgs.grid || imgs.small || '', images:imgs,
+      summary:s.summary || s.short_summary || '', image: imgs.large || imgs.common || imgs.medium || imgs.grid || imgs.small || '', images:imgs,
       rate:item.rate ?? 0, comment:item.comment || '', tags:normalizeTags(item.tags), myTags:normalizeTags(item.tags), publicTags:normalizePublicTags(s.tags || item.publicTags || item.public_tags), ep_status:item.ep_status ?? '', vol_status:item.vol_status ?? '',
       private:!!item.private,
       collection_created_at:item.created_at || item.createdAt || item.collect_created_at || '',
@@ -1009,20 +1872,29 @@
     if(c?.cover_data_url && !onlineCoverUrl(c)) return {dataUrl:c.cover_data_url};
     return null;
   }
-  function onlineCoverUrl(c){ return c.image || c.images?.large || c.images?.common || c.images?.medium || c.images?.grid || c.images?.small || ''; }
+  function onlineCoverUrl(c){ return rewriteImageUrl(c.image || c.images?.large || c.images?.common || c.images?.medium || c.images?.grid || c.images?.small || ''); }
   function coverUrl(c){
     if(window.BANGUMI_VAULT_OFFLINE_STATE && c.cover_data_url) return c.cover_data_url;
     return c.cover_local_url || onlineCoverUrl(c) || c.cover_data_url || '';
   }
 
+  function subjectSummary(c){
+    return String(c?.summary || c?.short_summary || c?.raw?.subject?.summary || c?.raw?.subject?.short_summary || '').trim();
+  }
+
   function renderStatusNav(){
     const counts = {0:0,1:0,2:0,3:0,4:0,5:0,99:0};
-    for(const c of getAllCollections()){
-      if(c.status !== 'confirmed_deleted' && c.status !== 'missing_candidate') counts[0]++;
-      if(c.status === 'missing_candidate' || c.status === 'protected_local' || c.status === 'confirmed_deleted') counts[99]++;
-      if(c.status !== 'missing_candidate' && c.status !== 'confirmed_deleted') counts[c.collection_type] = (counts[c.collection_type]||0)+1;
+    const scoped = getAllCollections().filter(c => !filters.type || c.subject_type === filters.type);
+    for(const c of scoped){
+      const isMissing = c.status === 'missing_candidate';
+      const isDeleted = c.status === 'confirmed_deleted';
+      const isProtected = c.status === 'protected_local';
+      if(!isDeleted && !isMissing) counts[0]++;
+      if(isMissing || isProtected || isDeleted) counts[99]++;
+      if(!isMissing && !isDeleted) counts[c.collection_type] = (counts[c.collection_type]||0)+1;
     }
-    $('statusNav').innerHTML = Object.entries(STATUS).map(([k,v])=>`<button data-status="${k}" class="${filters.status==k?'active':''}"><span>${v}</span><span class="badge ${k==99&&counts[99]?'danger':''}">${counts[k]||0}</span></button>`).join('');
+    const navMap = statusMapForNav();
+    $('statusNav').innerHTML = Object.entries(navMap).map(([k,v])=>`<button data-status="${k}" class="${filters.status==k?'active':''}"><span>${v}</span><span class="badge ${k==99&&counts[99]?'danger':''}">${counts[k]||0}</span></button>`).join('');
     $('statusNav').querySelectorAll('button').forEach(btn=>btn.onclick=()=>{ resetRenderLimit(); filters.status=Number(btn.dataset.status); filters.tag='全部'; render(); });
   }
   function renderTags(){
@@ -1051,7 +1923,7 @@
     if(!renderLimit) resetRenderLimit();
     const step = pageSize();
     $('countPill').textContent = `${arr.length} 条`;
-    $('filterSummary').textContent = `${STATUS[filters.status] || '全部'} / ${tagLabelFromKey(filters.tag)} / ${filters.type ? SUBJECT_LABEL[filters.type] : '全部分类'}`;
+    $('filterSummary').textContent = `${statusLabel(filters.type, filters.status)} / ${tagLabelFromKey(filters.tag)} / ${filters.type ? SUBJECT_LABEL[filters.type] : '全部分类'}`;
     if(!arr.length){
       if(filters.status === 99){
         $('content').innerHTML = `<div class="safety-empty"><div class="safety-panel"><h2>安全箱现在是空的，这是好事。</h2><p>安全箱不是普通分类，它只在“本地以前有，但这次远端完整同步后突然没有出现”的时候才会有内容。</p><div class="safety-steps"><div class="safety-step"><b>1. 正常同步新增条目：</b>你在 Bangumi 网页新增或修改收藏后，点“同步最新变动”，它会写入本地。</div><div class="safety-step"><b>2. 远端疑似吞条目：</b>条目不会被本地删除，而是进入安全箱。</div><div class="safety-step"><b>3. 你手动判断：</b>确认线上删除 / 本地保留 / 等下次同步恢复。</div></div></div></div>`;
@@ -1073,12 +1945,12 @@
     }
   }
   function cardHTML(c, i=0){
-    const img = coverUrl(c); const statusLabel = STATUS[c.collection_type] || '未知'; const tags=uniqStrings([...myTagsOf(c), ...publicTagNames(c)]).slice(0,5);
+    const img = coverUrl(c); const statusLabelText = statusLabel(c.subject_type, c.collection_type) || '未知'; const tags=uniqStrings([...myTagsOf(c), ...publicTagNames(c)]).slice(0,5);
     const flag = c.status === 'missing_candidate' ? '<span class="pill danger">疑似消失</span>' : c.status === 'protected_local' ? '<span class="pill">本地保留</span>' : c.status === 'confirmed_deleted' ? '<span class="pill danger">已确认删除</span>' : '';
     const comment = c.comment ? `<div class="comment">${esc(c.comment)}</div>` : '<div class="comment no-comment">没有填写吐槽。</div>';
     return `<article class="card" data-id="${c.subject_id}" style="--i:${i}" title="${esc(c.title)}">
       <div class="card-glow"></div>
-      <div class="cover-wrap"><div class="status-ribbon">${esc(statusLabel)}</div>${c.rate?`<div class="rate">★ ${esc(c.rate)}</div>`:''}${img?`<img class="cover" data-id="${c.subject_id}" src="${esc(img)}" loading="lazy" referrerpolicy="no-referrer" />`:`<div class="no-cover">${esc(c.title)}</div>`}</div>
+      <div class="cover-wrap"><div class="status-ribbon">${esc(statusLabelText)}</div>${c.rate?`<div class="rate">★ ${esc(c.rate)}</div>`:''}${img?`<img class="cover" data-id="${c.subject_id}" src="${esc(img)}" loading="lazy" referrerpolicy="no-referrer" />`:`<div class="no-cover">${esc(c.title)}</div>`}</div>
       <div class="card-body"><div class="name">${esc(c.title)}</div><div class="meta"><span>${esc(SUBJECT_LABEL[c.subject_type]||'条目')}</span>${c.date?`<span>${esc(c.date)}</span>`:''}${flag}</div>${comment}<div class="mini-tags">${tags.map(t=>`<span>${esc(t)}</span>`).join('')}</div></div>
     </article>`;
   }
@@ -1132,7 +2004,7 @@
     activeDrawerId = id; const c = state.collections[id]; if(!c) return;
     const imgCache = await getCachedImage(id); const img = imgCache?.dataUrl || imgCache?.url || coverUrl(c);
     const hist = state.history.filter(h => String(h.subject_id)===String(id)).slice(-10).reverse();
-    const statusPills = `<span class="pill">${esc(SUBJECT_LABEL[c.subject_type]||'条目')}</span><span class="pill">${esc(STATUS[c.collection_type]||'未知')}</span>${c.private?`<span class="pill">私密</span>`:''}${c.status==='missing_candidate'?`<span class="pill danger">安全箱 · 疑似消失</span>`:''}`;
+    const statusPills = `<span class="pill">${esc(SUBJECT_LABEL[c.subject_type]||'条目')}</span><span class="pill">${esc(statusLabel(c.subject_type, c.collection_type)||'未知')}</span>${c.private?`<span class="pill">私密</span>`:''}${c.status==='missing_candidate'?`<span class="pill danger">安全箱 · 疑似消失</span>`:''}`;
     const myTags = myTagsOf(c);
     const publicTags = publicTagsOf(c);
     const publicTagsShown = publicTagsForDisplay(c);
@@ -1140,8 +2012,8 @@
     const publicTagsHtml = publicTagsShown.length ? publicTagsShown.map(t=>`<button class="tag-chip tag-filter-btn public-tag" data-tag-key="${esc(tagKey('public', t.name))}"><span class="tag-kind">公共</span>${esc(t.name)}${t.count?` · ${esc(t.count)}`:''}</button><a class="tag-open" href="${esc(bgmTagUrl(c.subject_type, t.name))}" target="_blank" rel="noopener" title="打开 Bangumi 标签页">↗</a>`).join(' ') : '<span class="muted-inline">未缓存。可点“刷新公共标签”。</span>';
     const hiddenPublicTags = Math.max(0, publicTags.length - publicTagsShown.length);
     const publicTagsNote = publicTags.length
-      ? `已缓存 ${publicTags.length} 个公共标签${c.public_tags_source === 'website' ? '。来源：Bangumi 条目页“大家将…标注为”区域' : '。来源：API ，可能与官网标签区不完全一致'}${c.public_tags_fetched_at ? '。刷新于 ' + esc(formatDate(c.public_tags_fetched_at)) : '。可点“刷新公共标签”重取。'}`
-      : '公共标签来自 Bangumi 条目公开信息；在线版/网络异常时可能无法补全。';
+      ? `已缓存 ${publicTags.length} 个公共标签。来源：Bangumi API${c.public_tags_fetched_at ? '，刷新于 ' + esc(formatDate(c.public_tags_fetched_at)) : ''}。`
+      : '公共标签来自 Bangumi API；可点“刷新公共标签”补全。';
 
     const actions = `${c.status==='missing_candidate'?`<button class="btn good small wide" id="keepLocalBtn">本地保留</button><button class="btn bad small wide" id="confirmDeleteBtn">确认线上删除</button>`:''}${c.status==='confirmed_deleted'?`<button class="btn good small wide" id="restoreBtn">恢复显示</button>`:''}`;
     $('drawer').innerHTML = `<div class="detail-bg">${img?`<img src="${esc(img)}" referrerpolicy="no-referrer" />`:''}</div>
@@ -1163,11 +2035,11 @@
           </section>
           <section class="detail-grid-v8">
             <div class="detail-stack">
-              <div class="info-card"><h3>我的吐槽 / 观后感</h3><div class="longtext big-comment">${esc(c.comment || '没有填写吐槽。')}</div></div>
-              ${c.summary?`<div class="info-card"><h3>条目简介</h3><div class="longtext">${esc(c.summary)}</div></div>`:''}
+              <div class="info-card subject-summary-card"><h3>条目简介</h3><div class="longtext">${esc(subjectSummary(c) || '本地还没有简介。可点「同步最近 / 完整同步」或「刷新公共标签」补全条目资料。')}</div></div>
+              <div class="info-card comment-card"><h3>我的吐槽 / 观后感</h3><div class="longtext big-comment">${esc(c.comment || '没有填写吐槽。')}</div></div>
             </div>
             <div class="detail-stack">
-              <div class="info-card"><h3>资料库信息</h3><div class="kv"><div>条目 ID</div><div>${esc(c.subject_id||'-')}</div><div>原名</div><div>${esc(c.name||'-')}</div><div>中文名</div><div>${esc(c.name_cn||'-')}</div><div>上映日期</div><div>${esc(c.date||'-')}</div><div>Bangumi均分</div><div>${esc(formatScoreValue(c.bgm_score || c.raw?.subject?.score || c.raw?.subject?.rating?.score) || '-')}</div><div>排名</div><div>${esc(c.rank || '-')}</div><div>进度</div><div>${esc([c.ep_status?`章节 ${c.ep_status}`:'',c.vol_status?`卷 ${c.vol_status}`:''].filter(Boolean).join(' / ') || '-')}</div><div>条目最后更新时间</div><div>${esc(formatDate(c.bangumi_updated_at)||'-')}</div><div>首次备份</div><div>${esc(formatDate(c.first_seen_at)||'-')}</div><div>本地同步</div><div>${esc(formatDate(c.last_synced_at || c.last_seen_at)||'-')}</div><div>状态</div><div>${esc(c.status||'active')}${c.missing_count?`，缺失次数 ${c.missing_count}`:''}</div></div></div>
+              <div class="info-card"><h3>资料库信息</h3><div class="kv"><div>条目 ID</div><div>${esc(c.subject_id||'-')}</div><div>原名</div><div>${esc(c.name||'-')}</div><div>中文名</div><div>${esc(c.name_cn||'-')}</div><div>上映日期</div><div>${esc(c.date||'-')}</div><div>Bangumi均分</div><div>${esc(formatScoreValue(c.bgm_score || c.raw?.subject?.score || c.raw?.subject?.rating?.score) || '-')}</div><div>排名</div><div>${esc(c.rank || '-')}</div><div>进度</div><div>${esc([c.ep_status?`章节 ${c.ep_status}`:'',c.vol_status?`卷 ${c.vol_status}`:''].filter(Boolean).join(' / ') || '-')}</div><div>API更新时间</div><div>${esc(formatDate(c.bangumi_updated_at)||'-')}</div><div>首次备份</div><div>${esc(formatDate(c.first_seen_at)||'-')}</div><div>本地同步</div><div>${esc(formatDate(c.last_synced_at || c.last_seen_at)||'-')}</div><div>状态</div><div>${esc(c.status||'active')}${c.missing_count?`，缺失次数 ${c.missing_count}`:''}</div></div></div>
               <div class="info-card"><h3>我的标签</h3><div class="tag-cloud">${myTagsHtml}</div></div>
               <div class="info-card"><h3>公共标签</h3><div class="tag-cloud">${publicTagsHtml}</div><p class="help" style="margin:10px 0 0">${publicTagsNote}<br>点击标签在本地筛选；点 ↗ 打开 Bangumi 对应标签页。</p></div>
               <div class="info-card"><h3>备份历史</h3><div class="history-list">${hist.length?hist.map(h=>`<div class="hist"><b>${esc(h.change_type)}</b> · ${esc(formatDate(h.created_at))}<br>${historyChangeHtml(h)}</div>`).join(''):'<div class="hist">还没有历史变更。</div>'}</div></div>
@@ -1178,7 +2050,7 @@
     $('drawerMask').classList.remove('closing'); $('drawer').classList.remove('closing'); $('drawerMask').classList.add('show'); $('drawer').classList.add('show');
     $('closeDrawerBtn').onclick = closeDrawer; $('drawerMask').onclick = closeDrawer;
     $('drawer').querySelectorAll('[data-tag-key]').forEach(btn=>btn.onclick=(ev)=>{ ev.stopPropagation(); resetRenderLimit(); filters.tag = btn.dataset.tagKey; closeDrawer(); render(); });
-    $('openBgmBtn').onclick = () => window.open(`https://bgm.tv/subject/${c.subject_id}`,'_blank','noopener');
+    $('openBgmBtn').onclick = () => window.open(`${siteBase()}/subject/${c.subject_id}`,'_blank','noopener');
     $('copyCommentBtn').onclick = async () => { await navigator.clipboard?.writeText(c.comment||''); toast('已复制吐槽'); };
     const keep=$('keepLocalBtn'); if(keep) keep.onclick=async()=>{ c.status='protected_local'; c.missing_count=0; await saveState(); render(); openDrawer(id); toast('已标记为本地保留'); };
     const del=$('confirmDeleteBtn'); if(del) del.onclick=async()=>{ if(confirm('确认把这个条目标记为线上已删除？历史和导出仍会保留。')){ c.status='confirmed_deleted'; c.missing_count=(c.missing_count||0)+1; state.history.push({subject_id:c.subject_id, change_type:'confirmed_deleted', old:null, new:structuredClone(c), created_at:nowISO(), note:'用户确认远端删除'}); await saveState(); render(); openDrawer(id); } };
@@ -1192,13 +2064,15 @@
     $('statTotal').textContent = active.length; $('statMissing').textContent = arr.filter(c=>c.status==='missing_candidate').length;
     $('statComments').textContent = active.filter(c=>c.comment).length; const tagSet = new Set(); active.forEach(c=>allTagNames(c).forEach(t=>tagSet.add(t))); $('statTags').textContent = tagSet.size;
     $('accountPill').textContent = state.settings.username ? `@${state.settings.username}` : '未登录';
-    const last = state.runs.filter(r=>r.success).at(-1); $('lastSyncText').textContent = last ? `上次同步：${formatDate(last.finished_at)}，新增 ${last.added||0}，修改 ${last.modified||0}，疑似消失 ${last.missing||0}` : '尚未同步'; localApiAvailable().then(ok=>{ const el=$('portableStatus'); if(el) el.textContent = ok ? '存储：资料库/收藏数据.json + 资料库/封面缓存' : '存储：浏览器本地库（建议用启动脚本）'; });
+    const last = state.runs.filter(r=>r.success).at(-1); $('lastSyncText').textContent = last ? `上次同步：${formatDate(last.finished_at)}，新增 ${last.added||0}，修改 ${last.modified||0}，疑似消失 ${last.missing||0}` : '尚未同步'; if($('bangumiLogoLink')) $('bangumiLogoLink').href = siteBase(); localApiAvailable().then(ok=>{ const el=$('portableStatus'); if(el) el.textContent = ok ? '存储：资料库/收藏数据.json + 资料库/封面缓存' : '存储：浏览器本地库（建议用启动脚本）'; });
   }
   function render(){ renderStats(); renderStatusNav(); renderTags(); renderCards(); }
 
-  async function apiFetch(path, token){
+  async function apiFetch(path, token, options={}){
+    const isPrivate = options.private !== false && !!String(token || '').trim();
+    const base = apiBaseFor(isPrivate);
     const headers = {'Accept':'application/json'}; if(token) headers.Authorization = 'Bearer ' + token.trim();
-    const res = await fetch(API_BASE + path, {headers, mode:'cors'});
+    const res = await fetch(base + path, {headers, mode:'cors'});
     if(!res.ok){ const text=await res.text().catch(()=>res.statusText); throw new Error(`HTTP ${res.status}: ${text.slice(0,200)}`); }
     return res.json();
   }
@@ -1213,10 +2087,10 @@
   }
   function readToken(){ return $('tokenInput').value.trim() || runtimeToken || state.settings.token || ''; }
   async function saveSettingsFromUI(){
-    state.settings.username = $('usernameInput').value.trim(); state.settings.recentMonths = Math.max(1, Math.min(120, Number($('recentMonthsInput')?.value || 3))); state.settings.pageSize = clampNum($('pageSizeInput')?.value, 40, 360, 120); state.settings.commentLines = clampNum($('commentLinesInput')?.value, 0, 6, 3); state.settings.borderWidth = clampNum($('borderWidthInput')?.value, 0, 4, 1); state.settings.rememberToken = $('rememberTokenInput').checked; state.settings.token = state.settings.rememberToken ? $('tokenInput').value.trim() : '';
+    state.settings.username = $('usernameInput').value.trim(); state.settings.recentMonths = Math.max(1, Math.min(120, Number($('recentMonthsInput')?.value || 3))); state.settings.pageSize = clampNum($('pageSizeInput')?.value, 40, 360, 120); state.settings.commentLines = clampNum($('commentLinesInput')?.value, 0, 6, 0); state.settings.borderWidth = clampNum($('borderWidthInput')?.value, 0, 4, 1); state.settings.customFont = String($('customFontInput')?.value || '').trim(); state.settings.apiBase = cleanBaseUrl($('apiBaseInput')?.value || '', ''); state.settings.imageProxyBase = cleanBaseUrl($('imageProxyBaseInput')?.value || '', ''); state.settings.siteBase = cleanBaseUrl($('siteBaseInput')?.value || '', ''); state.settings.customApiPrivate = !!$('customApiPrivateInput')?.checked; state.settings.rememberToken = $('rememberTokenInput').checked; state.settings.token = state.settings.rememberToken ? $('tokenInput').value.trim() : '';
     runtimeToken = $('tokenInput').value.trim() || runtimeToken; applyAppearance(false); refreshSegmentedControls(); resetRenderLimit(); await saveState(); render(); toast('设置已保存');
   }
-  function fillSettingsUI(){ $('tokenInput').value = state.settings.rememberToken ? (state.settings.token||'') : runtimeToken; $('usernameInput').value = state.settings.username||''; if($('recentMonthsInput')) $('recentMonthsInput').value = state.settings.recentMonths || 3; if($('pageSizeInput')) $('pageSizeInput').value = pageSize(); if($('commentLinesInput')) $('commentLinesInput').value = clampNum(state.settings.commentLines,0,6,3); if($('borderWidthInput')) $('borderWidthInput').value = clampNum(state.settings.borderWidth,0,4,1); $('rememberTokenInput').checked = !!state.settings.rememberToken; refreshSegmentedControls(); }
+  function fillSettingsUI(){ $('tokenInput').value = state.settings.rememberToken ? (state.settings.token||'') : runtimeToken; $('usernameInput').value = state.settings.username||''; if($('recentMonthsInput')) $('recentMonthsInput').value = state.settings.recentMonths || 3; if($('pageSizeInput')) $('pageSizeInput').value = pageSize(); if($('commentLinesInput')) $('commentLinesInput').value = clampNum(state.settings.commentLines,0,6,0); if($('customFontInput')) $('customFontInput').value = state.settings.customFont || ''; if($('borderWidthInput')) $('borderWidthInput').value = clampNum(state.settings.borderWidth,0,4,1); if($('apiBaseInput')) $('apiBaseInput').value = state.settings.apiBase || ''; if($('imageProxyBaseInput')) $('imageProxyBaseInput').value = state.settings.imageProxyBase || ''; if($('siteBaseInput')) $('siteBaseInput').value = state.settings.siteBase || ''; if($('customApiPrivateInput')) $('customApiPrivateInput').checked = !!state.settings.customApiPrivate; $('rememberTokenInput').checked = !!state.settings.rememberToken; refreshSegmentedControls(); }
 
 
   async function syncRecent(){ return syncCollections('recent'); }
@@ -1238,14 +2112,38 @@
       for(const st of SUBJECT_TYPES){
         for(const ct of COLLECTION_TYPES){
           const got = mode === 'recent'
-            ? await fetchCollectionRecent(username, st, ct, token, cutoff, (page,total,stop)=>{ log('syncLog',`${SUBJECT_LABEL[st]} / ${STATUS[ct]}：第 ${page} 页，累计 ${total}${stop?'，已到时间边界':''}`); })
-            : await fetchCollectionAll(username, st, ct, token, (page,total)=>{ log('syncLog',`${SUBJECT_LABEL[st]} / ${STATUS[ct]}：第 ${page} 页，累计 ${total}`); });
+            ? await fetchCollectionRecent(username, st, ct, token, cutoff, (page,total,stop)=>{ log('syncLog',`${SUBJECT_LABEL[st]} / ${statusLabel(st, ct)}：第 ${page} 页，累计 ${total}${stop?'，已到时间边界':''}`); })
+            : await fetchCollectionAll(username, st, ct, token, (page,total)=>{ log('syncLog',`${SUBJECT_LABEL[st]} / ${statusLabel(st, ct)}：第 ${page} 页，累计 ${total}`); });
           remote.push(...got); taskDone++; setProgress(taskDone/totalTasks*70); await sleep(mode === 'recent' ? 80 : 160);
         }
       }
-      log('syncLog',`远端读取完成：${remote.length} 条。开始比对本地...`);
+      log('syncLog',`远端读取完成：${remote.length} 条。开始补全条目简介与比对本地...`);
       const seen = new Map();
       for(const item of remote){ const n = makeSnapshot(normalizeCollection(item, item.__fallback)); if(n.subject_id) seen.set(String(n.subject_id), n); }
+      const needsSubjectInfo = [...seen.values()].filter(n => !subjectSummary(n)).slice(0, mode === 'recent' ? 60 : 180);
+      if(needsSubjectInfo.length){
+        log('syncLog',`有 ${needsSubjectInfo.length} 个条目缺少简介，正在通过 Bangumi API 补全...`);
+        for(let i=0;i<needsSubjectInfo.length;i++){
+          const n = needsSubjectInfo[i];
+          try{
+            const info = await apiFetch(`/v0/subjects/${encodeURIComponent(n.subject_id)}`, token || '', {private:false});
+            const imgs = info.images || {};
+            n.summary = info.summary || info.short_summary || n.summary || '';
+            n.name = info.name || n.name || '';
+            n.name_cn = info.name_cn || n.name_cn || '';
+            n.title = n.name_cn || n.name || n.title;
+            n.date = info.date || n.date || '';
+            n.eps = info.eps ?? n.eps; n.volumes = info.volumes ?? n.volumes;
+            n.bgm_score = info.rating?.score ?? info.score ?? n.bgm_score;
+            n.rank = info.rating?.rank ?? info.rank ?? n.rank;
+            n.publicTags = normalizePublicTags(info.tags || n.publicTags);
+            n.image = imgs.large || imgs.common || imgs.medium || imgs.grid || imgs.small || n.image || '';
+            n.images = Object.keys(imgs).length ? imgs : (n.images || {});
+            n.content_hash = hashString(stableStringify(comparable(n)));
+          }catch(e){ if(i < 5) log('syncLog',`简介补全失败 ${n.subject_id}：${e.message || e}`); }
+          if((i+1)%20===0) await sleep(180); else await sleep(80);
+        }
+      }
       if(mode === 'full'){
         const activeLocal = getAllCollections().filter(c=>c.status!=='confirmed_deleted' && c.status!=='protected_local');
         const missingPreview = activeLocal.filter(c=>!seen.has(String(c.subject_id)));
@@ -1312,9 +2210,10 @@
   async function fetchSubjectPublicTags(subjectId, token){
     // 纯 API 获取公共标签，避免抓取 Bangumi 网页。
     // 注意：API 返回的 tags 可能与网页“大家将...标注为”区域的展示数量和顺序略有差异。
-    const js = await apiFetch(`/v0/subjects/${encodeURIComponent(subjectId)}`, token || '');
+    const js = await apiFetch(`/v0/subjects/${encodeURIComponent(subjectId)}`, token || '', {private:false});
     return {
       tags: normalizePublicTags(js.tags || js.subject?.tags || []).sort((a,b)=>(Number(b.count)||0)-(Number(a.count)||0) || String(a.name).localeCompare(String(b.name),'zh-Hans-CN')),
+      subject: js,
       source: 'api'
     };
   }
@@ -1336,6 +2235,19 @@
         if(row){
           const before = structuredClone(row);
           row.publicTags = tags;
+          const subjectInfo = tagResult.subject || {};
+          const subjectImages = subjectInfo.images || {};
+          row.summary = subjectInfo.summary || subjectInfo.short_summary || row.summary || '';
+          row.name = subjectInfo.name || row.name || '';
+          row.name_cn = subjectInfo.name_cn || row.name_cn || '';
+          row.title = row.name_cn || row.name || row.title;
+          row.date = subjectInfo.date || row.date || '';
+          row.eps = subjectInfo.eps ?? row.eps;
+          row.volumes = subjectInfo.volumes ?? row.volumes;
+          row.bgm_score = subjectInfo.rating?.score ?? subjectInfo.score ?? row.bgm_score;
+          row.rank = subjectInfo.rating?.rank ?? subjectInfo.rank ?? row.rank;
+          row.image = subjectImages.large || subjectImages.common || subjectImages.medium || subjectImages.grid || subjectImages.small || row.image || '';
+          row.images = Object.keys(subjectImages).length ? subjectImages : (row.images || {});
           row.public_tags_source = Array.isArray(tagResult) ? 'api' : (tagResult.source || 'api');
           row.public_tags_fetched_at = nowISO();
           row.content_hash = hashString(stableStringify(comparable(row)));
@@ -1417,13 +2329,13 @@
     for(const c of Object.values(s.collections || {})) delete c.cover_data_url;
     return s;
   }
-  function manifest(){ const arr=getAllCollections(); return {app:'Bangumi 保管库 PosterWall', schema:9, exported_at:nowISO(), username:state.settings.username||'', collections_count:arr.length, active_count:arr.filter(c=>c.status!=='confirmed_deleted'&&c.status!=='missing_candidate').length, missing_count:arr.filter(c=>c.status==='missing_candidate').length, history_count:state.history.length}; }
+  function manifest(){ const arr=getAllCollections(); return {app:'Bangumi 保管库 PosterWall', schema:10, exported_at:nowISO(), username:state.settings.username||'', collections_count:arr.length, active_count:arr.filter(c=>c.status!=='confirmed_deleted'&&c.status!=='missing_candidate').length, missing_count:arr.filter(c=>c.status==='missing_candidate').length, history_count:state.history.length}; }
   function buildJson(){ return JSON.stringify({manifest:manifest(), state:safeExportState()}, null, 2); }
   function csvCell(s){ return '"' + String(s ?? '').replace(/"/g,'""') + '"'; }
   function buildCsv(){
-    const head=['subject_id','分类','状态','标题','原名','中文名','日期','我的评分','Bangumi均分','进度章节','进度卷','我的标签','公共标签','全部标签','吐槽/观后感','是否私密','条目最后更新时间','本地同步时间','本地状态','首次备份','最后确认存在'];
+    const head=['subject_id','分类','状态','标题','原名','中文名','日期','我的评分','Bangumi均分','进度章节','进度卷','我的标签','公共标签','全部标签','吐槽/观后感','是否私密','API更新时间','本地同步时间','本地状态','首次备份','最后确认存在'];
     const lines=[head.map(csvCell).join(',')];
-    for(const c of getAllCollections()) lines.push([c.subject_id,SUBJECT_LABEL[c.subject_type]||c.subject_type,STATUS[c.collection_type]||c.collection_type,c.title,c.name,c.name_cn,c.date,c.rate,(formatScoreValue(c.bgm_score || c.raw?.subject?.score || c.raw?.subject?.rating?.score) || ''),c.ep_status,c.vol_status,myTagsOf(c).join(' / '),publicTagNames(c).join(' / '),allTagNames(c).join(' / '),c.comment,c.private?'是':'否',c.bangumi_updated_at,c.last_synced_at || c.last_seen_at || '',c.status,c.first_seen_at,c.last_seen_at].map(csvCell).join(','));
+    for(const c of getAllCollections()) lines.push([c.subject_id,SUBJECT_LABEL[c.subject_type]||c.subject_type,statusLabel(c.subject_type,c.collection_type)||c.collection_type,c.title,c.name,c.name_cn,c.date,c.rate,(formatScoreValue(c.bgm_score || c.raw?.subject?.score || c.raw?.subject?.rating?.score) || ''),c.ep_status,c.vol_status,myTagsOf(c).join(' / '),publicTagNames(c).join(' / '),allTagNames(c).join(' / '),c.comment,c.private?'是':'否',c.bangumi_updated_at,c.last_synced_at || c.last_seen_at || '',c.status,c.first_seen_at,c.last_seen_at].map(csvCell).join(','));
     return '\ufeff' + lines.join('\r\n');
   }
   async function enrichExportCollections(mode='inline', onProgress){
@@ -1527,7 +2439,7 @@
     return getAllCollections().map(c=>({
       subject_id:c.subject_id,
       分类:SUBJECT_LABEL[c.subject_type]||c.subject_type,
-      状态:STATUS[c.collection_type]||c.collection_type,
+      状态:statusLabel(c.subject_type,c.collection_type)||c.collection_type,
       标题:c.title||'',
       原名:c.name||'',
       中文名:c.name_cn||'',
@@ -1541,7 +2453,7 @@
       全部标签:allTagNames(c).join(' / '),
       吐槽观后感:c.comment||'',
       是否私密:c.private?'是':'否',
-      条目最后更新时间:c.bangumi_updated_at||'',
+      API更新时间:c.bangumi_updated_at||'',
       本地同步时间:c.last_synced_at || c.last_seen_at || '',
       本地状态:c.status||'active',
       首次备份:c.first_seen_at||'',
@@ -1559,10 +2471,10 @@
       return {
         序号: idx + 1,
         条目ID: c.subject_id,
-        条目链接: `https://bgm.tv/subject/${c.subject_id}`,
+        条目链接: `${siteBase()}/subject/${c.subject_id}`,
         分类: SUBJECT_LABEL[c.subject_type]||c.subject_type,
-        状态: STATUS[c.collection_type]||c.collection_type,
-        分类状态: `${SUBJECT_LABEL[c.subject_type]||c.subject_type} / ${STATUS[c.collection_type]||c.collection_type}`,
+        状态: statusLabel(c.subject_type,c.collection_type)||c.collection_type,
+        分类状态: `${SUBJECT_LABEL[c.subject_type]||c.subject_type} / ${statusLabel(c.subject_type,c.collection_type)||c.collection_type}`,
         年份: d.year,
         月份: d.month,
         季度: d.quarter,
@@ -1592,7 +2504,7 @@
         是否私密: c.private ? '是' : '否',
         本地状态: c.status || 'active',
         是否安全箱: c.status === 'missing_candidate' ? '是' : '否',
-        条目最后更新时间: c.bangumi_updated_at || '',
+        API更新时间: c.bangumi_updated_at || '',
         本地同步时间: c.last_synced_at || c.last_seen_at || '',
         首次备份: c.first_seen_at || '',
         最后确认存在: c.last_seen_at || '',
@@ -1663,7 +2575,7 @@
   }
   function buildXlsxBlob(){
     const rich = exportRichRows();
-    const headers = ['序号','条目ID','条目链接','分类','状态','分类状态','年份','月份','季度','年月','上映日期','标题','中文名','原名','我的评分','我的评分档','Bangumi均分','Bangumi评分档','已看集数','总集数','进度百分比','进度档','进度卷','有吐槽','吐槽字数','主标签','标签数量','标签1','标签2','标签3','标签4','标签5','全部标签','我的标签','公共标签','吐槽观后感','是否私密','本地状态','是否安全箱','条目最后更新时间','首次备份','最后确认存在','封面文件','排序用更新时间'];
+    const headers = ['序号','条目ID','条目链接','分类','状态','分类状态','年份','月份','季度','年月','上映日期','标题','中文名','原名','我的评分','我的评分档','Bangumi均分','Bangumi评分档','已看集数','总集数','进度百分比','进度档','进度卷','有吐槽','吐槽字数','主标签','标签数量','标签1','标签2','标签3','标签4','标签5','全部标签','我的标签','公共标签','吐槽观后感','是否私密','本地状态','是否安全箱','API更新时间','首次备份','最后确认存在','封面文件','排序用更新时间'];
     const detailRows = [headers, ...rich.map(r=>headers.map(h=>r[h]))];
     const statusRows = [['分类','状态','数量','有吐槽','有评分','平均我的评分','平均Bangumi均分','安全箱数量']];
     const cats = [...new Set(rich.map(r=>r.分类))].sort(); const sts = [...new Set(rich.map(r=>r.状态))].sort();
@@ -1673,8 +2585,8 @@
     const tagRows = [['标签','数量','分类范围','状态范围','平均我的评分','平均Bangumi均分','示例条目']];
     [...tagMap.values()].sort((a,b)=>b.count-a.count || a.tag.localeCompare(b.tag)).forEach(o=>tagRows.push([o.tag,o.count,[...o.cats].join(' / '),[...o.sts].join(' / '),mean(o.scores),mean(o.bgm),o.examples.join(' / ')]));
     const commentRows = [['标题','分类','状态','我的评分','Bangumi均分','年份','标签','吐槽字数','吐槽/观后感','条目链接']];
-    rich.filter(r=>r.有吐槽==='是').sort((a,b)=>String(b.条目最后更新时间).localeCompare(String(a.条目最后更新时间))).forEach(r=>commentRows.push([r.标题,r.分类,r.状态,r.我的评分,r.Bangumi均分,r.年份,r.全部标签,r.吐槽字数,r.吐槽观后感,r.条目链接]));
-    const safetyRows = [['条目ID','标题','分类','状态','最后确认存在','条目最后更新时间','本地状态','吐槽/观后感','条目链接'], ...rich.filter(r=>r.是否安全箱==='是'||r.本地状态==='missing_candidate').map(r=>[r.条目ID,r.标题,r.分类,r.状态,r.最后确认存在,r.条目最后更新时间,r.本地状态,r.吐槽观后感,r.条目链接])];
+    rich.filter(r=>r.有吐槽==='是').sort((a,b)=>String(b.API更新时间).localeCompare(String(a.API更新时间))).forEach(r=>commentRows.push([r.标题,r.分类,r.状态,r.我的评分,r.Bangumi均分,r.年份,r.全部标签,r.吐槽字数,r.吐槽观后感,r.条目链接]));
+    const safetyRows = [['条目ID','标题','分类','状态','最后确认存在','API更新时间','本地状态','吐槽/观后感','条目链接'], ...rich.filter(r=>r.是否安全箱==='是'||r.本地状态==='missing_candidate').map(r=>[r.条目ID,r.标题,r.分类,r.状态,r.最后确认存在,r.API更新时间,r.本地状态,r.吐槽观后感,r.条目链接])];
     const summaryRows = [
       Object.assign(['Bangumi 保管库表格备份', '', '', '', '', '', ''], {__style:2, __height:28}),
       ['导出时间', nowISO(), '账号', state.settings.username||'', '总条目', rich.length, ''],
@@ -2014,6 +2926,7 @@
   function bindEvents(){
     syncCustomControls();
     bindSegmentedControls();
+    if($('useCustomFontBtn')) $('useCustomFontBtn').onclick = async () => { state.settings.fontFamily = 'custom'; state.settings.customFont = String($('customFontInput')?.value || '').trim(); applyAppearance(false); refreshSegmentedControls(); await saveState(); toast('已应用自定义字体'); };
     $('settingsBtn').onclick=()=>{ fillSettingsUI(); openModal('settingsModal'); };
     $('exportBtn').onclick=()=> openModal('exportModal');
     document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>closeModal(b.dataset.close));

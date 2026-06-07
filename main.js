@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, shell, Menu, nativeImage } = require('electron');
+const { app, BrowserWindow, ipcMain, shell, Menu, nativeImage, screen } = require('electron');
 const http = require('http');
 const https = require('https');
 const fs = require('fs');
@@ -211,7 +211,7 @@ function downloadBuffer(remoteUrl, redirectsLeft = 5) {
     const req = client.request(parsed, {
       method: 'GET',
       headers: {
-        'User-Agent': 'BangumiVault/0.29.3 (local image backup)',
+        'User-Agent': 'BangumiVault/0.29.6 (local image backup)',
         'Referer': 'https://bgm.tv/',
         'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8'
       },
@@ -426,11 +426,14 @@ function startLocalServer() {
 function createMainWindow() {
   const isMac = process.platform === 'darwin';
   const iconImage = nativeImage.createFromPath(windowIconPath());
+  const workArea = screen.getPrimaryDisplay().workAreaSize;
+  const adaptiveWidth = Math.max(1120, Math.min(1560, Math.round(workArea.width * 0.84)));
+  const adaptiveHeight = Math.max(720, Math.min(940, Math.round(workArea.height * 0.86)));
   mainWindow = new BrowserWindow({
-    width: 1220,
-    height: 820,
-    minWidth: 980,
-    minHeight: 660,
+    width: adaptiveWidth,
+    height: adaptiveHeight,
+    minWidth: 1040,
+    minHeight: 680,
     show: false,
     title: APP_NAME,
     frame: false,
@@ -452,7 +455,10 @@ function createMainWindow() {
     mainWindow.setIcon(iconImage);
   }
 
-  mainWindow.once('ready-to-show', () => mainWindow.show());
+  mainWindow.once('ready-to-show', () => {
+    mainWindow.center();
+    mainWindow.show();
+  });
   mainWindow.loadURL(localServerUrl);
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {

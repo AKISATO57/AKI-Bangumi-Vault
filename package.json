@@ -1,6 +1,6 @@
 {
   "name": "bangumi-vault",
-  "version": "0.29.4",
+  "version": "0.30.0",
   "description": "Bangumi 保管库：本地优先的 Bangumi 收藏备份桌面应用。",
   "main": "main.js",
   "private": true,

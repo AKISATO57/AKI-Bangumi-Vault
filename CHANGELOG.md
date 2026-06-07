@@ -1,4 +1,20 @@
 
+## v0.29.9
+
+- 重新整理设置窗口为更紧凑的横向布局，折叠高级网络设置时尽量一屏显示。
+- 项目链接移动到底部信息栏，降低视觉权重。
+- 优化高级网络设置展开动画和设置项对齐。
+
+## v0.29.7
+
+- 新增高级网络设置：API 地址、图片反代地址、Bangumi 站点地址。
+- 默认登录与收藏同步仍使用官方 api.bgm.tv；可手动开启“收藏同步 / 登录也使用自定义 API”。
+- 公共标签等公开条目信息可使用自定义 API。
+- 支持将 lain.bgm.tv / bgm.tv 图片地址改写到自定义图片反代。
+- 支持将“打开 Bangumi”和标签跳转改到自定义站点镜像。
+- 设置页增加 Access Token 经第三方反代的安全提示。
+
+
 ## v0.29.1 - Time fields and public tag refresh preview
 
 - Refresh public tags for the current filtered result set instead of only filling empty tags.
@@ -37,3 +53,12 @@
 ## 历史版本
 
 历史变更记录见 `docs/CHANGELOG_v0.xx.txt`。
+
+## v0.29.10
+
+- 修正设置界面横向布局、边框错位与输入框对齐。
+- 调整账号与同步区域高度，减少空白。
+- 高级网络设置改为独立折叠条，不影响其它卡片边框。
+- 底部 GitHub / Bangumi 图标放大并增强可读性。
+- 新增主题色选项。
+- 将“同步最近”按钮改为轻量紫色样式。
