@@ -6408,10 +6408,36 @@ html[data-bv-ui="lg26"] .drawer .detail-close-v8{border-radius:16px!important}
 /* Electron 顶栏更低（38px 起），滚动区偏移相应加大 */
 html.electron-exact-effect{--bv-top-off:calc(var(--topbar-h) + 46px)}
 </style>
-<style id="bv-shared-extras">html[data-bv-ui="classic"] .bv-lg26-only{display:none!important}</style>
+<style id="bv-shared-extras">
+html[data-bv-ui="classic"] .bv-lg26-only{display:none!important}
+.sync-result-panel{margin-top:14px;padding:14px;border:1px solid var(--line);border-radius:18px;background:rgba(255,255,255,.045)}
+#syncModal .modal-card{width:min(1180px,calc(100vw - 40px));max-height:calc(100vh - 24px)}
+.sync-result-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.sync-result-head strong{font-size:14px;color:var(--text)}
+.sync-result-head span{font-size:12px;color:var(--muted)}
+.sync-result-list{display:grid;gap:7px;max-height:none;overflow:visible;padding-right:2px}
+.sync-result-item{display:grid;grid-template-columns:34px minmax(0,1fr) auto;align-items:start;gap:9px;width:100%;padding:6px 8px;border:1px solid transparent;border-radius:12px;background:rgba(255,255,255,.035);color:var(--text);text-align:left;cursor:pointer;font:inherit}
+.sync-result-item:hover{border-color:color-mix(in srgb,var(--a) 45%,var(--line));background:color-mix(in srgb,var(--a) 9%,transparent)}
+.sync-result-cover{width:34px;height:46px;border-radius:7px;object-fit:cover;background:rgba(255,255,255,.08);display:grid;place-items:center;color:var(--muted);font-size:11px;overflow:hidden}
+.sync-result-cover img{width:100%;height:100%;object-fit:cover;display:block}
+.sync-result-title{min-width:0;display:flex;flex-direction:column;gap:3px}
+.sync-result-title b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px}
+.sync-result-title small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);font-size:11px}
+.sync-result-detail{display:block;overflow:visible!important;text-overflow:clip!important;white-space:normal!important;line-height:1.45;color:var(--soft)!important}
+.sync-result-badges{display:flex;justify-content:flex-end;gap:4px;flex-wrap:wrap}
+.sync-result-badge{padding:3px 6px;border-radius:999px;border:1px solid var(--line);color:var(--soft);font-size:10px;white-space:nowrap}
+.sync-result-badge.added{color:#8ff0bc;border-color:rgba(101,230,165,.35);background:rgba(101,230,165,.1)}
+.sync-result-badge.modified{color:#8bdcff;border-color:rgba(70,217,255,.35);background:rgba(70,217,255,.1)}
+.sync-result-badge.restored{color:#d3b1ff;border-color:rgba(164,112,255,.35);background:rgba(164,112,255,.1)}
+.sync-result-badge.missing,.sync-result-badge.error{color:#ffb2b2;border-color:rgba(255,107,107,.35);background:rgba(255,107,107,.1)}
+.sync-result-badge.episode{color:#ffd98a;border-color:rgba(255,209,102,.35);background:rgba(255,209,102,.1)}
+.sync-result-badge.catalog-incremental{color:#9fe7ff;border-color:rgba(85,211,255,.35);background:rgba(85,211,255,.1)}
+.sync-result-badge.catalog-full{color:#ffbd8a;border-color:rgba(255,151,83,.35);background:rgba(255,151,83,.1)}
+@media (max-width:560px){#syncModal .modal-card{width:calc(100vw - 16px);padding:14px}.sync-result-item{grid-template-columns:30px minmax(0,1fr);}.sync-result-cover{width:30px;height:40px}.sync-result-badges{grid-column:2;justify-content:flex-start}}
+</style>
 </head>
 <body>
-<script>/*bv-build*/window.BV_APP_VERSION='1.0.0';</script>
+<script>/*bv-build*/window.BV_APP_VERSION='1.1.0';</script>
 <script>/*bv-ui-boot*/(function(){
   /* 1.0 起默认新界面（玻璃拟态）；只有明确选过经典界面才是 classic。 */
   var ui = 'lg26';
@@ -6755,6 +6781,7 @@ html.electron-exact-effect{--bv-top-off:calc(var(--topbar-h) + 46px)}
       <p class="help" id="syncHelp">日常同步只读取最近几个月的更新并增量写入；完整同步才做全量核对和安全箱判断。</p>
       <div class="progress"><div class="bar" id="syncBar"></div></div>
       <div class="sync-log" id="syncLog" style="margin-top:14px"></div>
+      <div class="sync-result-panel hidden" id="syncResultPanel" aria-live="polite"></div>
     </div>
   </div>
 
@@ -6803,7 +6830,7 @@ html.electron-exact-effect{--bv-top-off:calc(var(--topbar-h) + 46px)}
   function statusMapForNav(){ return filters.type ? (STATUS_BY_TYPE[Number(filters.type)] || STATUS) : STATUS; }
   const SUBJECT_LABEL = {1:'书籍',2:'动画',3:'音乐',4:'游戏',6:'三次元'};
   const BGM_TYPE_PATH = {1:'book',2:'anime',3:'music',4:'game',6:'real'};
-  const DEFAULT_STATE = {schema:18, settings:{username:'', token:'', rememberToken:false, theme:'system', themeMode:'system', recentMonths:3, fontFamily:'system', customFont:'', cardSize:'standard', pageSize:120, commentLines:0, motion:'full', uiVersion:'lg26', uiVersionPicked:false, shelfMode:'auto', accentColor:'sakura', borderWidth:1, apiBase:'', imageProxyBase:'', siteBase:'', customApiPrivate:false, profileIntro:''}, collections:{}, history:[], runs:[], profile:null, storageMeta:null};
+  const DEFAULT_STATE = {schema:18, settings:{username:'', token:'', rememberToken:false, theme:'system', themeMode:'system', recentMonths:3, fontFamily:'system', customFont:'', cardSize:'standard', pageSize:120, commentLines:0, motion:'full', uiVersion:'lg26', uiVersionPicked:false, shelfMode:'auto', accentColor:'sakura', borderWidth:1, apiBase:'', imageProxyBase:'', siteBase:'', customApiPrivate:false, profileIntro:'', episodeStatusBaselineVersion:0}, collections:{}, history:[], runs:[], profile:null, storageMeta:null};
   let state = structuredClone(DEFAULT_STATE);
   let filters = {status:0, tag:'全部', type:0, q:'', sort:'updated_desc'};
   let tagSearchOpen = false;
@@ -7385,7 +7412,7 @@ html.electron-exact-effect{--bv-top-off:calc(var(--topbar-h) + 46px)}
     return out;
   }
   const COLLECTION_TAG_FIELDS = ['tags','myTags','my_tags','publicTags','public_tags','subjectTags','public_tags_source','public_tags_fetched_at'];
-  const COLLECTION_DETAIL_FIELDS = ['summary','short_summary','image','images','infobox','staff','persons','casts','voice_actors','cloud_characters','cloud_voice_fetched_at','subject_detail_fetched_at','subject_detail_missing_at','subject_detail_missing_auth_revision','episode_catalog','episode_catalog_fetched_at','episode_catalog_missing_at','episode_collection_statuses','episode_collection_fetched_at','episode_collection_total','episode_collection_status_schema','timeline_episode_times','timeline_episode_match_count','timeline_episode_matched_at','raw'];
+  const COLLECTION_DETAIL_FIELDS = ['summary','short_summary','image','images','infobox','staff','persons','casts','voice_actors','cloud_characters','cloud_voice_fetched_at','subject_detail_fetched_at','subject_detail_missing_at','subject_detail_missing_auth_revision','episode_catalog','episode_catalog_total','episode_catalog_fetched_at','episode_catalog_missing_at','episode_catalog_source_eps','episode_catalog_eps_mode','episode_collection_statuses','episode_collection_fetched_at','episode_collection_total','episode_collection_status_schema','timeline_episode_times','timeline_episode_match_count','timeline_episode_matched_at','raw'];
   function collectionStorageParts(){
     const collections = {};
     const details = {};
@@ -7483,7 +7510,7 @@ html.electron-exact-effect{--bv-top-off:calc(var(--topbar-h) + 46px)}
     return {
       schema:4,
       username:String(source.username||''),
-      site_base:String(source.site_base||''),
+      site_base:cleanBaseUrl(source.site_base, ''),
       events,
       marks:buildTimelineMarks(events),
       episode_marks:buildTimelineEpisodeMarks(events),
@@ -7695,7 +7722,7 @@ html.electron-exact-effect{--bv-top-off:calc(var(--topbar-h) + 46px)}
     SUBJECT_DETAIL_CACHE_FIELDS.forEach(field=>{
       if(!hasCachedValue(snapshot[field]) && hasCachedValue(cached[field])) snapshot[field] = structuredClone(cached[field]);
     });
-    ['subject_detail_fetched_at','subject_detail_missing_at','subject_detail_missing_auth_revision','episode_catalog_fetched_at','episode_catalog_missing_at','cloud_subject_missing_at','cloud_subject_missing_auth_revision','cloud_rank_fetched_at'].forEach(field=>{
+    ['subject_detail_fetched_at','subject_detail_missing_at','subject_detail_missing_auth_revision','episode_catalog_total','episode_catalog_fetched_at','episode_catalog_missing_at','cloud_subject_missing_at','cloud_subject_missing_auth_revision','cloud_rank_fetched_at'].forEach(field=>{
       if(cached[field] !== undefined && snapshot[field] === undefined) snapshot[field] = cached[field];
     });
     snapshot.content_hash = hashString(stableStringify(comparable(snapshot)));
@@ -7755,7 +7782,11 @@ html.electron-exact-effect{--bv-top-off:calc(var(--topbar-h) + 46px)}
   }
   function primaryEpisodeCatalog(row){
     const catalog = normalizeEpisodeCatalog(row?.episode_catalog || []);
-    return catalog.filter(entry=>entry.type === 0 && entry.ep > 0 && entry.sort > 0)
+    // Bangumi can expose decimal chapters such as 15.5 with type=0. They are
+    // still valid catalogue rows, but `eps` counts the numbered episodes only.
+    // Keep decimal rows in the catalogue while excluding them from the count
+    // used to decide whether the remote episode total changed.
+    return catalog.filter(entry=>entry.type === 0 && Number.isInteger(entry.ep) && entry.ep > 0)
       .sort((a,b)=>a.ep-b.ep || a.sort-b.sort || a.id-b.id);
   }
   function specialEpisodeCatalog(row){
@@ -7785,11 +7816,284 @@ html.electron-exact-effect{--bv-top-off:calc(var(--topbar-h) + 46px)}
       offset += page.length;
     }
     row.episode_catalog = normalizeEpisodeCatalog(all);
+    row.episode_catalog_total = Number.isFinite(total) ? total : row.episode_catalog.length;
     row.episode_catalog_fetched_at = nowISO();
+    const expected = Math.floor(Number(row?.eps));
+    const primaryTotal = primaryEpisodeCatalog(row).length;
+    if(Number.isFinite(expected) && expected > 0){
+      row.episode_catalog_source_eps = expected;
+      row.episode_catalog_eps_mode = expected === row.episode_catalog.length
+        ? 'catalog'
+        : (expected === primaryTotal ? 'primary' : 'unknown');
+    }
     delete row.episode_catalog_missing_at;
     return row.episode_catalog;
   }
   const EPISODE_COLLECTION_STATUS_SCHEMA = 2;
+  const EPISODE_STATUS_BASELINE_VERSION = 1;
+  // Collection list sync gives us the completed count, but the per-episode
+  // snapshot is what the detail view uses when it is present. Keep that
+  // snapshot current for rows whose progress changed, without re-fetching it
+  // for every unchanged row on every complete sync.
+  const BV_EPISODE_COLLECTION_STATUS_TTL_MS = 90 * 1000;
+  function episodeCollectionStatusNeedsRefresh(row, now=Date.now(), force=false){
+    if(force) return true;
+    const fetchedAt = Date.parse(String(row?.episode_collection_fetched_at || ''));
+    if(Number(row?.episode_collection_status_schema || 0) < EPISODE_COLLECTION_STATUS_SCHEMA
+      || !Number.isFinite(fetchedAt)) return true;
+    const remoteUpdatedAt = Date.parse(String(row?.bangumi_updated_at || ''));
+    // The collection list exposes the last remote change time even when the
+    // aggregate completed count stays the same (for example, unwatching one
+    // episode and watching another).
+    // When Bangumi gives us a usable timestamp, it is authoritative. The
+    // short TTL is only a fallback for older rows/API responses without one.
+    if(Number.isFinite(remoteUpdatedAt)) return remoteUpdatedAt > fetchedAt;
+    return now - fetchedAt >= BV_EPISODE_COLLECTION_STATUS_TTL_MS;
+  }
+  function episodeCatalogRefreshPlan(row, force=false, now=Date.now()){
+    if(row?.episode_catalog_missing_at) return false;
+    if(!hasEpisodeCatalog(row)) return {kind:'full', reason:'missing'};
+    if(force) return {kind:'full', reason:'forced'};
+    const fetchedAt = Date.parse(String(row?.episode_catalog_fetched_at || ''));
+    if(!Number.isFinite(fetchedAt)) return {kind:'full', reason:'missing-timestamp'};
+    const catalog = normalizeEpisodeCatalog(row?.episode_catalog || []);
+    const localCatalogTotal = catalog.length;
+    const localPrimaryTotal = primaryEpisodeCatalog({episode_catalog:catalog}).length;
+    const cachedCatalogTotal = Math.floor(Number(row?.episode_catalog_total));
+    const expected = Math.floor(Number(row?.eps));
+    if(!Number.isFinite(expected) || expected <= 0) return {kind:'none', reason:'unknown-count'};
+
+    // Bangumi's `eps` is not consistent across old subjects: for some rows it
+    // includes specials, while for others it counts only regular episodes.
+    // Once a catalogue has been fetched, its recorded total is the reliable
+    // local baseline. Comparing `eps` with only the regular-episode count was
+    // the reason dozens of unchanged titles were queued on every sync.
+    let sourceEps = Math.floor(Number(row?.episode_catalog_source_eps));
+    let mode = String(row?.episode_catalog_eps_mode || '');
+    if(!Number.isFinite(sourceEps) && Number.isFinite(cachedCatalogTotal) && cachedCatalogTotal === localCatalogTotal){
+      // Migrate old caches without a network request. An unambiguous catalogue
+      // still gets a future change detector; ambiguous special-episode rows
+      // are accepted as-is until their `eps` value changes.
+      if(localPrimaryTotal === localCatalogTotal && expected !== localCatalogTotal){
+        return {kind:'full', reason:'episode-count-decreased', expected, local:localCatalogTotal};
+      }
+      row.episode_catalog_source_eps = expected;
+      row.episode_catalog_eps_mode = expected === localCatalogTotal
+        ? 'catalog'
+        : (expected === localPrimaryTotal ? 'primary' : 'unknown');
+      return {kind:'none', reason:'baseline-migrated'};
+    }
+    if(!Number.isFinite(sourceEps)){
+      // Very old caches predate the baseline fields. Migrate an unchanged
+      // cache locally, but do not hide the important "12 -> 11" case: when
+      // there are no specials, a smaller regular catalogue is an unambiguous
+      // deletion and must be fully replaced once.
+      if(expected === localCatalogTotal){
+        row.episode_catalog_source_eps = expected;
+        row.episode_catalog_eps_mode = 'catalog';
+        return {kind:'none', reason:'baseline-migrated'};
+      }
+      if(expected === localPrimaryTotal){
+        row.episode_catalog_source_eps = expected;
+        row.episode_catalog_eps_mode = 'primary';
+        return {kind:'none', reason:'baseline-migrated'};
+      }
+      if(localPrimaryTotal === localCatalogTotal && expected < localCatalogTotal){
+        return {kind:'full', reason:'episode-count-decreased', expected, local:localCatalogTotal};
+      }
+      // A mismatch with specials is ambiguous (Bangumi sometimes includes
+      // specials in `eps`, sometimes not). Keep the existing catalogue as the
+      // baseline instead of downloading it on every sync.
+      row.episode_catalog_source_eps = expected;
+      row.episode_catalog_eps_mode = 'unknown';
+      return {kind:'none', reason:'baseline-migrated-ambiguous'};
+    }
+    if(!mode){
+      mode = expected === localCatalogTotal ? 'catalog'
+        : (expected === localPrimaryTotal ? 'primary' : 'unknown');
+    }
+    // Older builds counted decimal type=0 rows (for example 15.5) as regular
+    // episodes and persisted that larger total as a `catalog` baseline. When
+    // the current eps value matches the integer-only count, migrate that
+    // stale baseline locally instead of issuing one more unnecessary refresh.
+    const hasDecimalPrimaryRow = catalog.some(entry => entry.type === 0
+      && Number.isFinite(Number(entry.ep)) && !Number.isInteger(Number(entry.ep)));
+    if(mode === 'catalog' && sourceEps === localCatalogTotal
+      && hasDecimalPrimaryRow && expected === localPrimaryTotal){
+      row.episode_catalog_source_eps = expected;
+      row.episode_catalog_eps_mode = 'primary';
+      return {kind:'none', reason:'baseline-migrated-primary'};
+    }
+    if(expected === sourceEps) return {kind:'none', reason:'fresh'};
+
+    // The count changed since the last confirmed baseline. Request only the
+    // tail when the cached catalogue is short; a decrease or ambiguous shape
+    // requires a full replacement so removed special chapters are detected.
+    const target = expected;
+    if(expected > localCatalogTotal || (mode === 'primary' && expected > localPrimaryTotal)){
+      return {kind:'incremental', reason:'episode-count-increased', expected, local:localCatalogTotal, target, countMode:mode};
+    }
+    return {kind:'full', reason:'episode-count-decreased', expected, local:localCatalogTotal};
+  }
+  function episodeCatalogNeedsRefresh(row, force=false, now=Date.now()){
+    const plan = episodeCatalogRefreshPlan(row, force, now);
+    return !!plan && plan.kind !== 'none';
+  }
+  async function fetchEpisodeCatalogIncremental(row, token, options={}){
+    const existing = normalizeEpisodeCatalog(row?.episode_catalog || []);
+    const plan = episodeCatalogRefreshPlan(row, false);
+    if(!plan || plan.kind !== 'incremental') return existing;
+    const id = Number(row?.subject_id) || 0;
+    if(!id) return existing;
+    let offset = existing.length;
+    // The cached total is only a historical hint. A newly published episode
+    // is precisely the case where that value is stale, so always probe the
+    // first page after the cached tail.
+    let total = Infinity;
+    const additions = [];
+    const targetCount = Number(plan.target || plan.expected);
+    const countMode = String(plan.countMode || 'catalog');
+    let pages = 0;
+    while(offset < total && pages < 200){
+      const payload = await apiFetch(`/v0/episodes?subject_id=${encodeURIComponent(id)}&limit=100&offset=${offset}`, token || '', {signal:options.signal || undefined});
+      const page = normalizeEpisodeCatalog(payload);
+      const declared = Number(payload?.total);
+      if(Number.isFinite(declared) && declared >= 0) total = declared;
+      if(!page.length) break;
+      additions.push(...page);
+      offset += page.length;
+      pages++;
+      const mergedCount = countMode === 'primary'
+        ? primaryEpisodeCatalog({episode_catalog:[...existing,...additions]}).length
+        : existing.length + additions.length;
+      if(mergedCount >= targetCount || page.length < 100) break;
+    }
+    const merged = normalizeEpisodeCatalog([...existing, ...additions]);
+    // A changed ordering or a stale total can make an offset request miss the
+    // new episode. Fall back to one full request so the cache never remains
+    // silently incomplete.
+    const mergedCount = countMode === 'primary'
+      ? primaryEpisodeCatalog({episode_catalog:merged}).length
+      : merged.length;
+    if(mergedCount < targetCount) return fetchEpisodeCatalog(row, token, options);
+    row.episode_catalog = merged;
+    row.episode_catalog_total = Number.isFinite(total) ? Math.max(total, merged.length) : merged.length;
+    row.episode_catalog_fetched_at = nowISO();
+    const expected = Math.floor(Number(row?.eps));
+    if(Number.isFinite(expected) && expected > 0){
+      row.episode_catalog_source_eps = expected;
+      row.episode_catalog_eps_mode = row.episode_catalog_eps_mode || (
+        expected === row.episode_catalog.length
+          ? 'catalog'
+          : (expected === primaryEpisodeCatalog(row).length ? 'primary' : 'unknown')
+      );
+    }
+    delete row.episode_catalog_missing_at;
+    return row.episode_catalog;
+  }
+  async function refreshEpisodeCatalog(row, token, options={}){
+    const plan = episodeCatalogRefreshPlan(row, !!options.force);
+    if(!plan || plan.kind === 'none') return {catalog:row?.episode_catalog || [], mode:'none', reason:plan?.reason || 'fresh'};
+    if(plan.kind === 'incremental') return {catalog:await fetchEpisodeCatalogIncremental(row, token, options), mode:'incremental', reason:plan.reason};
+    return {catalog:await fetchEpisodeCatalog(row, token, options), mode:'full', reason:plan.reason};
+  }
+  function episodeCatalogEntryLabel(entry){
+    const ep = Number(entry?.ep);
+    const number = Number.isFinite(ep) && ep > 0 ? `第${ep}集` : episodeTypeLabel(entry);
+    const title = String(entry?.name_cn || entry?.name || '').trim();
+    return `${number}${title ? `「${title}」` : ''}${entry?.id ? ` · ${entry.id}` : ''}`;
+  }
+  function episodeCatalogChangeSummary(beforeCatalog=[], afterCatalog=[]){
+    const before = normalizeEpisodeCatalog(beforeCatalog);
+    const after = normalizeEpisodeCatalog(afterCatalog);
+    const keyOf = entry => entry?.id ? `id:${entry.id}` : `shape:${entry.type}:${entry.ep}:${entry.sort}:${entry.name}:${entry.name_cn}`;
+    const beforeMap = new Map(before.map(entry=>[keyOf(entry), entry]));
+    const afterMap = new Map(after.map(entry=>[keyOf(entry), entry]));
+    const added = after.filter(entry=>!beforeMap.has(keyOf(entry)));
+    const removed = before.filter(entry=>!afterMap.has(keyOf(entry)));
+    const changed = after.filter(entry=>{
+      const old = beforeMap.get(keyOf(entry));
+      if(!old) return false;
+      return ['ep','sort','type','disc','airdate','name','name_cn'].some(field=>String(old[field] ?? '') !== String(entry[field] ?? ''));
+    });
+    const parts = [];
+    if(added.length) parts.push(`新增 ${added.length} 集`);
+    if(removed.length) parts.push(`删除 ${removed.length} 集`);
+    if(changed.length) parts.push(`更新 ${changed.length} 集`);
+    if(!parts.length) parts.push('章节内容无变化');
+    const samples = [];
+    if(added.length) samples.push(`新增：${added.slice(0,3).map(episodeCatalogEntryLabel).join('、')}`);
+    if(removed.length) samples.push(`删除：${removed.slice(0,3).map(episodeCatalogEntryLabel).join('、')}`);
+    if(changed.length) samples.push(`更新：${changed.slice(0,3).map(episodeCatalogEntryLabel).join('、')}`);
+    const overflow = Math.max(0, added.length - 3) + Math.max(0, removed.length - 3) + Math.max(0, changed.length - 3);
+    const detail = `${parts.join('，')}（${before.length} → ${after.length}）${samples.length ? `；${samples.join('；')}` : ''}${overflow ? `；另有 ${overflow} 项` : ''}`;
+    return {beforeCount:before.length, afterCount:after.length, added, removed, changed, summary:parts.join('，'), detail};
+  }
+  function timelineCatalogNeedsRefreshForCollection(row, affectedSubjectIds){
+    const id = String(row?.subject_id || '');
+    if(!id || !(affectedSubjectIds instanceof Set) || !affectedSubjectIds.has(id) || !hasEpisodeCatalog(row)) return false;
+    const catalogIds = new Set(normalizeEpisodeCatalog(row.episode_catalog || []).map(entry=>Number(entry.id)).filter(Boolean));
+    return Object.values(timelineEpisodeMarksForSubject(id)).some(mark=>{
+      const episodeId = Number(mark?.episode_id) || 0;
+      return episodeId > 0 && !catalogIds.has(episodeId);
+    });
+  }
+  async function refreshEpisodeStateAfterCollectionSync(rows, changedIds, token, task, options={}){
+    const ids = changedIds instanceof Set ? changedIds : new Set(changedIds || []);
+    const refreshCatalog = options.refreshCatalog !== false;
+    const refreshStaleStatuses = options.refreshStaleStatuses !== false;
+    const baselineStatuses = options.baselineStatuses === true;
+    const result = {catalogRefreshed:0, statusRefreshed:0, statusDeferred:0, errors:[], statusRefreshedIds:[], statusErrorIds:[]};
+    const animationRows = (rows || []).filter(row=>Number(row?.subject_type) === 2);
+    const total = animationRows.length;
+    let inspected = 0;
+    const reportProgress = ()=>{
+      if(typeof options.onProgress !== 'function') return;
+      options.onProgress({inspected, total, catalogRefreshed:result.catalogRefreshed,
+        statusRefreshed:result.statusRefreshed, statusDeferred:result.statusDeferred,
+        errors:result.errors.length});
+    };
+    for(const row of animationRows){
+      inspected++;
+      const id = String(row?.subject_id || '');
+      const force = ids.has(id);
+      const hasSnapshot = hasEpisodeCollectionStatusSnapshot(row);
+      const statusStale = hasSnapshot ? episodeCollectionStatusNeedsRefresh(row) : baselineStatuses;
+      const catalogNeeded = refreshCatalog && episodeCatalogNeedsRefresh(row, force);
+      const statusNeeded = String(token || '').trim() && hasEpisodeCatalog(row)
+        && (force || (refreshStaleStatuses && statusStale));
+      if(!catalogNeeded && !statusNeeded){
+        if(refreshStaleStatuses && !baselineStatuses && !force && !hasSnapshot && String(token || '').trim() && hasEpisodeCatalog(row)) result.statusDeferred++;
+        if(inspected % 50 === 0 || inspected === total) reportProgress();
+        continue;
+      }
+      throwIfTaskCancelled(task);
+      let catalogRefreshed = false;
+      try{
+        if(catalogNeeded){
+          await fetchEpisodeCatalog(row, token || '', {signal:task?.controller?.signal});
+          result.catalogRefreshed++;
+          catalogRefreshed = true;
+        }
+        if(String(token || '').trim() && hasEpisodeCatalog(row)
+          && (force
+            || (catalogRefreshed && hasSnapshot)
+            || (refreshStaleStatuses && statusStale))){
+          await fetchEpisodeCollectionStatuses(row, token, {signal:task?.controller?.signal});
+          result.statusRefreshed++;
+          result.statusRefreshedIds.push(id);
+        }
+      }catch(error){
+        if(error?.name === 'AbortError' || taskWasCancelled(task)) throw error;
+        result.errors.push({subject_id:row.subject_id, error});
+        result.statusErrorIds.push(id);
+      }
+      await sleep(35);
+      if(inspected % 50 === 0 || inspected === total) reportProgress();
+    }
+    if(!total) reportProgress();
+    return result;
+  }
   function episodeCollectionItems(payload){
     return Array.isArray(payload) ? payload : (Array.isArray(payload?.data) ? payload.data : []);
   }
@@ -7831,6 +8135,20 @@ html.electron-exact-effect{--bv-top-off:calc(var(--topbar-h) + 46px)}
     const value = id ? row?.episode_collection_statuses?.[String(id)] : null;
     const type = Number(value?.type);
     return Number.isFinite(type) && type >= 1 && type <= 3 ? value : null;
+  }
+  function episodeCollectionStatusTime(status){
+    const timestamp = Number(status?.updated_at) || 0;
+    if(!timestamp) return '';
+    const date = new Date(timestamp * 1000);
+    return Number.isNaN(date.getTime()) ? '' : date.toLocaleString('zh-CN', {
+      year:'numeric', month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit', hour12:false
+    }).replace(/\//g, '-');
+  }
+  function episodeWatchTimeText(status, mark){
+    const official = episodeCollectionStatusTime(status);
+    if(official) return {text:`官方标记于 ${official}`, source:'official'};
+    if(mark?.time_text) return {text:`时间胶囊记录于 ${String(mark.time_text)}`, source:'timeline'};
+    return {text:'', source:''};
   }
   function episodeCollectionState(type){
     return ({0:'unwatched',1:'wish',2:'watched',3:'abandoned'})[Number(type)] || '';
@@ -8544,11 +8862,9 @@ html.electron-exact-effect{--bv-top-off:calc(var(--topbar-h) + 46px)}
         if(status) episodeStatuses[String(index + 1)] = status;
       });
     }
-    // Timeline episode events are written by the same Bangumi episode controls.
-    // They can be newer than a locally cached collection ep_status, so retain
-    // the furthest verified position rather than showing a contradictory value.
-    // Once the authenticated per-episode snapshot is available, it is the
-    // authoritative current state. Timeline records remain timestamps only.
+    // A saved per-episode snapshot is authoritative. Timeline marks remain
+    // available as a fallback only for legacy rows that have never received a
+    // complete snapshot from the Bangumi episode-status endpoint.
     const currentWatched = hasEpisodeStatuses
       ? Object.values(episodeStatuses).filter(status=>Number(status?.type) === 2).length
       : null;
@@ -8575,9 +8891,10 @@ html.electron-exact-effect{--bv-top-off:calc(var(--topbar-h) + 46px)}
       const label = `${episodeTypeLabel(entry)}${number ? ` ${number}` : ''}`;
       const name = entry.name_cn || entry.name || '';
       const stateLabel = status ? episodeCollectionStateLabel(status.type) : (hasSnapshot ? '未看' : timelineEpisodeStateLabel(state));
-      const detail = mark?.time_text
-        ? `${stateLabel}于 ${mark.time_text}`
-        : (hasSnapshot ? `${stateLabel}（Bangumi 章节状态已同步${status ? '；时间胶囊未记录逐集时间' : ''}）` : (mark ? '时间胶囊已记录该章节状态' : '章节状态正在同步'));
+      const watchTime = episodeWatchTimeText(status, mark);
+      const detail = watchTime.text
+        ? `${stateLabel} · ${watchTime.text}`
+        : (hasSnapshot ? `${stateLabel}（Bangumi 章节状态已同步，暂无逐集时间）` : (mark ? '时间胶囊已记录该章节状态' : '章节状态正在同步'));
       const compact = state === 'unwatched';
       const tipText = `${label}${name ? ` · ${name}` : ''} · ${detail}`;
       return `<span class="episode-special-chip ${state ? `state-${state}` : ''} ${compact ? 'is-unwatched' : ''}" data-episode-tip="${esc(tipText)}" aria-label="${esc(tipText)}"><b>${esc(number || '?')}</b>${compact ? '' : `<small>${esc(stateLabel || '已记录')}</small>`}</span>`;
@@ -8613,7 +8930,7 @@ html.electron-exact-effect{--bv-top-off:calc(var(--topbar-h) + 46px)}
     const visibleTotal = Math.min(count, 96);
     const watchedStatusMax = Math.max(0, ...Object.entries(resolved.episodeStatuses || {}).filter(([,status])=>Number(status?.type) === 2).map(([episode])=>Number(episode) || 0));
     const timedEpisodeMax = Math.max(0, ...Object.keys(resolved.episodeTimes || {}).map(episode=>Number(episode) || 0));
-    const focusEpisode = Math.max(1, Math.min(count, Math.max(watchedStatusMax, timedEpisodeMax, watched || 1)));
+    const focusEpisode = Math.max(1, Math.min(count, Math.max(watchedStatusMax, resolved.hasEpisodeStatuses ? 0 : timedEpisodeMax, watched || 1)));
     const visibleStart = count > visibleTotal ? Math.max(1, Math.min(count - visibleTotal + 1, focusEpisode - Math.floor(visibleTotal * .72))) : 1;
     const cols = Math.max(1, Math.min(24, visibleTotal));
     const mobileCols = Math.max(1, Math.min(18, visibleTotal));
@@ -8639,20 +8956,36 @@ html.electron-exact-effect{--bv-top-off:calc(var(--topbar-h) + 46px)}
       const episode = visibleStart + i;
       const displayEpisode = displayEpisodeAt(episode);
       const collectionStatus = resolved.episodeStatuses?.[String(episode)] || null;
-      const isWatched = collectionStatus ? Number(collectionStatus.type) === 2 : episode <= watched;
-      const mark = isWatched ? episodeTimes?.[String(episode)] : null;
+      // Once a complete Bangumi chapter snapshot exists, an absent chapter
+      // entry is explicitly not watched. Only fall back to the aggregate
+      // progress when no per-chapter snapshot has ever been saved.
+      const isWatched = resolved.hasEpisodeStatuses
+        ? Number(collectionStatus?.type) === 2
+        : (collectionStatus ? Number(collectionStatus.type) === 2 : episode <= watched);
+      // A snapshot decides whether the chapter is watched. Timeline marks are
+      // still useful as historical time metadata, but must never change that
+      // state (an old capsule can disagree with the current collection).
+      const mark = isWatched ? (episodeTimes?.[String(episode)] || null) : null;
       const stateMark = episodeStates[String(episode)] || null;
-      const state = collectionStatus ? episodeCollectionState(collectionStatus.type) : timelineEpisodeMarkState(stateMark);
-      const watchedText = collectionStatus
-        ? episodeCollectionStateLabel(collectionStatus.type)
+      const state = resolved.hasEpisodeStatuses
+        ? episodeCollectionState(collectionStatus?.type ?? 0)
+        : timelineEpisodeMarkState(stateMark);
+      const watchedText = resolved.hasEpisodeStatuses
+        ? episodeCollectionStateLabel(collectionStatus?.type ?? 0)
         : (state ? timelineEpisodeStateLabel(state) : (isWatched ? '已看' : '未看'));
       const sourceEpisode = Number(mark?.source_episode ?? displayEpisode);
       const sourceText = Number.isFinite(sourceEpisode) && Math.abs(sourceEpisode - Number(displayEpisode)) >= 0.0001 ? ` · 胶囊记录为第 ${episodeLabel(sourceEpisode)} 集` : '';
-      const timeText = mark?.time_text
-        ? (mark.source === 'batch' ? `${sourceText} · 通过“看到”批量标记于 ${mark.time_text}` : `${sourceText} · 观看于 ${mark.time_text}`)
-        : (collectionStatus
-          ? ' · Bangumi 章节状态已同步，时间胶囊未记录逐集时间'
-          : (stateMark?.time_text ? ` · ${watchedText}于 ${stateMark.time_text}` : (isWatched ? (hasTimelineEpisodeRecords ? ' · 时间胶囊没有这个章节的记录' : ' · 时间胶囊没有该条目的逐集观看记录') : '')));
+      // The official timestamp applies to every saved chapter state, not just
+      // "watched": Bangumi also records when a chapter became wishlisted or
+      // dropped. Keep the state label and timestamp together in the tooltip.
+      const watchTime = collectionStatus
+        ? episodeWatchTimeText(collectionStatus, mark)
+        : (isWatched ? episodeWatchTimeText(null, mark) : {text:'', source:''});
+      const timeText = watchTime.text
+        ? ` · ${watchTime.text}${mark?.source === 'batch' && watchTime.source === 'timeline' ? '（通过“看到”批量标记）' : ''}${sourceText}`
+        : (resolved.hasEpisodeStatuses
+          ? (collectionStatus ? ' · Bangumi 章节状态已同步，暂无逐集时间' : '')
+          : (stateMark?.time_text ? ` · 时间胶囊记录于 ${stateMark.time_text}` : (isWatched ? (hasTimelineEpisodeRecords ? ' · 时间胶囊没有这个章节的记录' : ' · 时间胶囊没有该条目的逐集观看记录') : '')));
       const displayLabel = episodeLabel(displayEpisode);
       const tipText = `第 ${displayLabel} 集 · ${watchedText}${timeText}`;
       return `<span class="ep-cell-v9 ${isWatched ? 'watched' : ''} ${state ? `state-${state}` : ''} ${displayLabel.length > 3 ? 'is-long-number' : ''}" data-episode-tip="${esc(tipText)}" aria-label="${esc(tipText)}"><b>${esc(displayLabel)}</b></span>`;
@@ -8738,7 +9071,7 @@ html.electron-exact-effect{--bv-top-off:calc(var(--topbar-h) + 46px)}
   function timelineMarkPill(subjectId){
     const mark = timelineMarkForSubject(subjectId);
     if(!mark?.time_text) return '';
-    return `<span class="pill timeline-marked-at" title="来自时间胶囊的最早收藏或进度记录">标记于 ${esc(mark.time_text)}</span>`;
+    return `<span class="pill timeline-marked-at" title="来自时间胶囊的最早收藏或进度记录">时间胶囊记录于 ${esc(mark.time_text)}</span>`;
   }
   let drawerHistoryIndex = null;
   let drawerHistoryIndexSource = null;
@@ -9513,32 +9846,34 @@ html.electron-exact-effect{--bv-top-off:calc(var(--topbar-h) + 46px)}
     });
     return merged;
   }
-  async function readAllTimeCapsules(){
+  async function readAllTimeCapsules(options={}){
     const timelineReadVersion = 2;
+    const automatic = !!options.automatic;
     const username = String(state.settings.username || state.profile?.username || '').trim();
-    if(!username){ toast('\u8bf7\u5148\u5728\u8bbe\u7f6e\u4e2d\u586b\u5199 Bangumi \u7528\u6237\u540d'); return; }
-    if(!(await localApiAvailable())){ toast('\u8bfb\u53d6\u65f6\u95f4\u80f6\u56ca\u9700\u8981\u684c\u9762\u7248\u672c\u5730\u670d\u52a1'); return; }
+    if(!username){ if(!automatic) toast('\u8bf7\u5148\u5728\u8bbe\u7f6e\u4e2d\u586b\u5199 Bangumi \u7528\u6237\u540d'); return {ok:false, reason:'username-missing'}; }
+    if(!(await localApiAvailable())){ if(!automatic) toast('\u8bfb\u53d6\u65f6\u95f4\u80f6\u56ca\u9700\u8981\u684c\u9762\u7248\u672c\u5730\u670d\u52a1'); return {ok:false, reason:'local-api-unavailable'}; }
     const currentBase = siteBase();
-    const hasMatchingCache = timelineCache.complete
-      && String(timelineCache.username || '') === username
-      && String(timelineCache.site_base || '') === currentBase
+    const cachedSite = cleanBaseUrl(timelineCache.site_base, '');
+    const hasMatchingCache = String(timelineCache.username || '') === username
+      && (!cachedSite || cachedSite === currentBase)
       && timelineCache.events.length > 0;
     const requiresEntityImageRebuild = hasMatchingCache && Number(timelineCache.entity_card_image_version || 0) < 2;
-    // Never force a full historical reread for an existing cache. This keeps
-    // accounts with thousands of capsules responsive; a manual full read is
-    // still available when the user explicitly starts from an empty cache.
+    // Never force a full historical reread when this account already has
+    // cached events. This also upgrades interrupted/legacy caches in place:
+    // page-one incremental reads can resume from any known event checkpoint.
     const incremental = hasMatchingCache;
     const prompt = incremental
       ? '将从第 1 页开始更新，遇到已缓存的事件后停止，不重复读取完整历史。\n将保持每页至少 1.25 秒的访问频率，是否继续？'
       : '将逐页读取全部时间胶囊，并以至少 1.25 秒/页的频率访问 Bangumi。读取可能需要较长时间，是否继续？';
-    if(!(await askNonBlockingConfirmation(prompt, {title:incremental ? '更新时间胶囊' : '读取时间胶囊', confirmText:incremental ? '开始更新' : '开始读取'}))) return;
-    const task = beginLongTask('timeline');
-    if(!task) return;
-    openModal('syncModal'); $('syncLog').textContent = ''; setProgress(0);
-    if($('syncTitle')) $('syncTitle').textContent = incremental ? '\u66f4\u65b0\u65f6\u95f4\u80f6\u56ca' : '\u8bfb\u53d6\u5168\u90e8\u65f6\u95f4\u80f6\u56ca';
+    if(!automatic && !(await askNonBlockingConfirmation(prompt, {title:incremental ? '更新时间胶囊' : '读取时间胶囊', confirmText:incremental ? '开始更新' : '开始读取'}))) return {ok:false, reason:'cancelled'};
+    const task = options.task || beginLongTask('timeline');
+    const ownsTask = !options.task;
+    if(!task) return {ok:false, reason:'task-busy'};
+    if(!automatic){ openModal('syncModal'); $('syncLog').textContent = ''; setProgress(0); }
+    if($('syncTitle')) $('syncTitle').textContent = automatic ? (incremental ? '\u5b8c\u6574\u540c\u6b65\uff1a\u66f4\u65b0\u65f6\u95f4\u80f6\u56ca' : '\u5b8c\u6574\u540c\u6b65\uff1a\u9996\u6b21\u8bfb\u53d6\u65f6\u95f4\u80f6\u56ca') : (incremental ? '\u66f4\u65b0\u65f6\u95f4\u80f6\u56ca' : '\u8bfb\u53d6\u5168\u90e8\u65f6\u95f4\u80f6\u56ca');
     if($('syncHelp')) $('syncHelp').textContent = incremental
       ? '\u4ece\u6700\u65b0\u52a8\u6001\u5f00\u59cb\u589e\u91cf\u5408\u5e76\uff0c\u9047\u5230\u672c\u5730\u8282\u70b9\u5c31\u505c\u6b62\u8bfb\u53d6\u3002'
-      : '\u65f6\u95f4\u80f6\u56ca\u5355\u72ec\u4fdd\u5b58\u5728 \u8d44\u6599\u5e93/\u65f6\u95f4\u80f6\u56ca\u6570\u636e.json\uff0c\u4e0d\u4f1a\u8ba9\u6536\u85cf\u6570\u636e\u6587\u4ef6\u53d8\u5927\u3002';
+      : (automatic ? '\u9996\u6b21\u5b8c\u6574\u540c\u6b65\u4f1a\u8bfb\u53d6\u5168\u90e8\u65f6\u95f4\u80f6\u56ca\uff0c\u7528\u6765\u6062\u590d\u9010\u96c6\u89c2\u770b\u72b6\u6001\u3002' : '\u65f6\u95f4\u80f6\u56ca\u5355\u72ec\u4fdd\u5b58\u5728 \u8d44\u6599\u5e93/\u65f6\u95f4\u80f6\u56ca\u6570\u636e.json\uff0c\u4e0d\u4f1a\u8ba9\u6536\u85cf\u6570\u636e\u6587\u4ef6\u53d8\u5927\u3002');
     let oldEvents = incremental ? timelineCache.events : [];
     const timelineImageMap = chronicleTimelineImageMap(hasMatchingCache ? timelineCache.events : oldEvents);
     const timelineBlogHydrationCache = new Map();
@@ -9546,6 +9881,7 @@ html.electron-exact-effect{--bv-top-off:calc(var(--topbar-h) + 46px)}
     const fetchedEvents = [];
     const fetchedIds = new Set();
     const newEventIds = new Set();
+    const newEventSubjects = new Set();
     let page = 1;
     let pagesRead = 0;
     let pageHint = 1;
@@ -9564,12 +9900,16 @@ html.electron-exact-effect{--bv-top-off:calc(var(--topbar-h) + 46px)}
           if(!eventId || fetchedIds.has(eventId)) return;
           fetchedIds.add(eventId);
           fetchedEvents.push(event);
-          if(!knownEventIds.has(eventId)) newEventIds.add(eventId);
+          if(!knownEventIds.has(eventId)){
+            newEventIds.add(eventId);
+            const subjectId = String(event.subject_id || '');
+            if(subjectId) newEventSubjects.add(subjectId);
+          }
         });
         pagesRead++;
         pageHint = Math.max(pageHint, parsed.maxPage || page);
         log('syncLog', `\u5df2\u8bfb\u53d6\u7b2c ${page} \u9875\uff0c\u672c\u6b21\u65b0\u589e ${newEventIds.size} \u6761\u4e8b\u4ef6`);
-        setProgress(checkpointOnPage || !parsed.nextPage ? 100 : Math.min(98, (page / Math.max(pageHint, page + 1)) * 100));
+        if(!automatic) setProgress(checkpointOnPage || !parsed.nextPage ? 100 : Math.min(98, (page / Math.max(pageHint, page + 1)) * 100));
         if(checkpointOnPage){ reachedCheckpoint = true; break; }
         page = parsed.nextPage;
       }
@@ -9605,17 +9945,19 @@ html.electron-exact-effect{--bv-top-off:calc(var(--topbar-h) + 46px)}
       const markCount = Object.keys(marks).length;
       log('syncLog', `\u5b8c\u6210\uff1a${incremental ? '\u65b0\u589e ' + newEventIds.size + ' \u6761\uff0c' : ''}\u7f13\u5b58\u5171 ${events.length} \u6761\u4e8b\u4ef6\uff0c\u5339\u914d\u5230 ${markCount} \u4e2a\u6761\u76ee\u7684\u9996\u6b21\u6807\u8bb0\u65f6\u95f4\uff1b\u5df2\u904d\u5386\u5168\u90e8\u8d44\u6599\u5e93\u5e76\u5339\u914d ${progressMatch.matchedRows} \u4e2a\u6761\u76ee\u7684 ${progressMatch.matchedEpisodes} \u6761\u9010\u96c6\u89c2\u770b\u8bb0\u5f55\u3002`);
       render();
-      toast(`\u65f6\u95f4\u80f6\u56ca\u5df2\u66f4\u65b0\uff1a${newEventIds.size} \u6761\u65b0\u4e8b\u4ef6\uff0c\u5df2\u5237\u65b0\u672c\u9875\u65e7\u4e8b\u4ef6\u7684\u56fe\u6587\u5185\u5bb9`);
+      if(!automatic) toast(`\u65f6\u95f4\u80f6\u56ca\u5df2\u66f4\u65b0\uff1a${newEventIds.size} \u6761\u65b0\u4e8b\u4ef6\uff0c\u5df2\u5237\u65b0\u672c\u9875\u65e7\u4e8b\u4ef6\u7684\u56fe\u6587\u5185\u5bb9`);
+      return {ok:true, incremental, newEventIds:[...newEventIds], affectedSubjectIds:[...newEventSubjects], eventsCount:events.length, progressMatch};
     }catch(error){
       if(taskWasCancelled(task) || error?.name === 'AbortError'){
         log('syncLog', '\u65f6\u95f4\u80f6\u56ca\u4efb\u52a1\u5df2\u7ec8\u6b62\uff0c\u5df2\u4fdd\u7559\u4e0a\u4e00\u9875\u5199\u5165\u7684\u7f13\u5b58\u8282\u70b9\u3002', 'warn');
-        toast('\u65f6\u95f4\u80f6\u56ca\u5df2\u7ec8\u6b62\uff0c\u4e0b\u6b21\u53ef\u4ece\u7f13\u5b58\u8282\u70b9\u7ee7\u7eed\u3002');
+        if(!automatic) toast('\u65f6\u95f4\u80f6\u56ca\u5df2\u7ec8\u6b62\uff0c\u4e0b\u6b21\u53ef\u4ece\u7f13\u5b58\u8282\u70b9\u7ee7\u7eed\u3002');
       }else{
         log('syncLog', `\u8bfb\u53d6\u5931\u8d25\uff1a${error?.message || error}`, 'error');
-        toast('\u65f6\u95f4\u80f6\u56ca\u8bfb\u53d6\u5931\u8d25\uff1a' + (error?.message || error));
+        if(!automatic) toast('\u65f6\u95f4\u80f6\u56ca\u8bfb\u53d6\u5931\u8d25\uff1a' + (error?.message || error));
+        return {ok:false, error:String(error?.message || error)};
       }
     }finally{
-      finishLongTask(task);
+      if(ownsTask) finishLongTask(task);
     }
   }
   async function testLogin(){
@@ -9639,6 +9981,87 @@ html.electron-exact-effect{--bv-top-off:calc(var(--topbar-h) + 46px)}
   }
   function fillSettingsUI(){ renderBuildStamp(); $('tokenInput').value = state.settings.rememberToken ? (state.settings.token||'') : runtimeToken; $('usernameInput').value = state.settings.username||''; if($('recentMonthsInput')) $('recentMonthsInput').value = state.settings.recentMonths || 3; if($('pageSizeInput')) $('pageSizeInput').value = pageSize(); if($('commentLinesInput')) $('commentLinesInput').value = clampNum(state.settings.commentLines,0,6,0); if($('customFontInput')) $('customFontInput').value = state.settings.customFont || ''; if($('borderWidthInput')) $('borderWidthInput').value = clampNum(state.settings.borderWidth,0,4,1); if($('apiBaseInput')) $('apiBaseInput').value = state.settings.apiBase || ''; if($('imageProxyBaseInput')) $('imageProxyBaseInput').value = state.settings.imageProxyBase || ''; if($('siteBaseInput')) $('siteBaseInput').value = state.settings.siteBase || ''; if($('profileIntroInput')) $('profileIntroInput').value = state.settings.profileIntro || ''; if($('customApiPrivateInput')) $('customApiPrivateInput').checked = !!state.settings.customApiPrivate; $('rememberTokenInput').checked = !!state.settings.rememberToken; refreshSegmentedControls(); }
 
+  function renderSyncResultPanel(result={}){
+    const panel = $('syncResultPanel');
+    if(!panel) return;
+    const catalogChanges = result.episodeCatalogChanges instanceof Map
+      ? result.episodeCatalogChanges
+      : new Map(Object.entries(result.episodeCatalogChanges || {}));
+    const collectionChanges = result.collectionChanges instanceof Map
+      ? result.collectionChanges
+      : new Map(Object.entries(result.collectionChanges || {}));
+    const groups = [
+      ['added','新增','added',result.addedIds],
+      ['modified','修改','modified',result.modifiedIds],
+      ['restored','恢复','restored',result.restoredIds],
+      ['missing','疑似消失','missing',result.missingIds],
+      ['catalogIncremental','章节表增量','catalog-incremental',result.episodeCatalogIncrementalIds],
+      ['catalogFull','章节表完整刷新','catalog-full',result.episodeCatalogFullIds],
+      ['episode','逐集状态更新','episode',result.statusRefreshedIds],
+      ['error','逐集状态失败','error',result.statusErrorIds]
+    ];
+    const entries = new Map();
+    groups.forEach(([key,label,klass,ids])=>{
+      for(const rawId of (ids || [])){
+        const id = String(rawId || ''); if(!id) continue;
+        const item = entries.get(id) || {
+          id,
+          badges:[],
+          catalogChange:catalogChanges.get(id) || null,
+          collectionChange:collectionChanges.get(id) || null
+        };
+        if(!item.catalogChange && catalogChanges.has(id)) item.catalogChange = catalogChanges.get(id);
+        if(!item.collectionChange && collectionChanges.has(id)) item.collectionChange = collectionChanges.get(id);
+        if(!item.badges.some(b=>b.key===key)) item.badges.push({key,label,klass});
+        entries.set(id,item);
+      }
+    });
+    panel.classList.remove('hidden');
+    if(!entries.size){
+      panel.innerHTML = '<div class="sync-result-head"><strong>本次同步完成</strong><span>没有需要单独展示的条目变化</span></div>';
+      return;
+    }
+    const rows = [...entries.values()].map(item=>{
+      const c = state.collections?.[item.id] || {subject_id:item.id, title:`条目 ${item.id}`};
+      return {item, c};
+    });
+    const summary = groups.filter(([,label,,ids])=>(ids?.size || ids?.length || 0) > 0)
+      .map(([,label,,ids])=>`${label} ${ids.size || ids.length}`).join(' · ');
+    const list = rows.map(({item,c})=>{
+      const title = c.title || c.name_cn || c.name || `条目 ${item.id}`;
+      const meta = `${SUBJECT_LABEL[c.subject_type] || '条目'} · ${item.id}`;
+      const img = coverUrl(c);
+      const cover = img
+        ? `<img src="${esc(img)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">`
+        : esc((title || '?').slice(0,1));
+      const badges = item.badges.map(b=>`<span class="sync-result-badge ${b.klass}">${b.label}</span>`).join('');
+      const detailParts = [];
+      const fieldChanges = Array.isArray(item.collectionChange) ? item.collectionChange : [];
+      if(fieldChanges.length){
+        detailParts.push(`字段变化：${fieldChanges.map(change=>`${change.label || change.field}：${change.from} → ${change.to}`).join('；')}`);
+      }
+      if(item.catalogChange?.detail) detailParts.push(`章节表：${item.catalogChange.detail}`);
+      if(!detailParts.length){
+        if(item.badges.some(b=>b.key === 'modified')) detailParts.push('收藏或条目资料已更新（字段差异未分类）');
+        else if(item.badges.some(b=>b.key === 'restored')) detailParts.push('条目已从安全箱恢复');
+        else if(item.badges.some(b=>b.key === 'missing')) detailParts.push('远端未找到，已进入安全箱候选');
+        else if(item.badges.some(b=>b.key === 'episode')) detailParts.push('逐集状态快照已更新');
+        else if(item.badges.some(b=>b.key === 'error')) detailParts.push('逐集状态更新失败，将在下次重试');
+      }
+      const detail = detailParts.length
+        ? `<small class="sync-result-detail">${esc(detailParts.join('；'))}</small>`
+        : '';
+      return `<button type="button" class="sync-result-item" data-sync-result-id="${esc(item.id)}" title="打开条目详情">
+        <span class="sync-result-cover">${cover}</span>
+        <span class="sync-result-title"><b>${esc(title)}</b><small>${esc(meta)}</small>${detail}</span>
+        <span class="sync-result-badges">${badges}</span>
+      </button>`;
+    }).join('');
+    panel.innerHTML = `<div class="sync-result-head"><strong>本次同步涉及 ${entries.size} 个条目</strong><span>${esc(summary)}</span></div><div class="sync-result-list">${list}</div>`;
+    panel.querySelectorAll('[data-sync-result-id]').forEach(button=>{
+      button.addEventListener('click',()=>{ const id = button.dataset.syncResultId; closeModal('syncModal'); if(id) openDrawer(id); });
+    });
+  }
 
   async function syncRecent(){ return syncCollections('recent'); }
   async function syncAll(){ return syncCollections('full'); }
@@ -9656,6 +10079,13 @@ html.electron-exact-effect{--bv-top-off:calc(var(--topbar-h) + 46px)}
     const recentMonths = Math.max(1, Math.min(120, Number(state.settings.recentMonths || 3)));
     const cutoff = new Date(); cutoff.setMonth(cutoff.getMonth() - recentMonths);
     openModal('syncModal'); $('syncLog').textContent=''; setProgress(0);
+    const syncResultIds = {added:new Set(), modified:new Set(), restored:new Set(), missing:new Set()};
+    const collectionChanges = new Map();
+    const episodeCatalogIncrementalIds = new Set();
+    const episodeCatalogFullIds = new Set();
+    const episodeCatalogChanges = new Map();
+    const syncResultPanel = $('syncResultPanel');
+    if(syncResultPanel){ syncResultPanel.classList.add('hidden'); syncResultPanel.innerHTML=''; }
     if($('syncTitle')) $('syncTitle').textContent = mode === 'recent' ? `同步最近 ${recentMonths} 个月` : '完整同步中';
     if($('syncHelp')) $('syncHelp').textContent = mode === 'recent'
       ? '日常同步只读取每个分类/状态最近几个月更新过的收藏；本地只写新增和修改，不判断远端删除，因此不会误进安全箱。'
@@ -9690,13 +10120,15 @@ html.electron-exact-effect{--bv-top-off:calc(var(--topbar-h) + 46px)}
         }
       }
       let added=0, modified=0, restored=0, missing=0;
+      const episodeStateRefreshIds = new Set();
       const runId = Date.now().toString(); const started_at=nowISO();
       for(const [id,n] of seen){
         const old = state.collections[id];
         if(!old){
           const commentTime = String(n.comment || '').trim() ? (n.bangumi_updated_at || n.collection_created_at || started_at) : '';
           state.collections[id] = {...n, status:'active', marked_at:n.collection_created_at || '', mark_changed_at:n.bangumi_updated_at || n.collection_created_at || started_at, mark_changed_source:'initial_sync', first_seen_at:started_at, last_seen_at:started_at, last_synced_at:started_at, comment_updated_at:commentTime, missing_count:0, last_sync_run_id:runId};
-          added++; state.history.push({subject_id:n.subject_id, change_type:'added', old:null, new:structuredClone(state.collections[id]), created_at:started_at, sync_run_id:runId, note:mode==='recent'?'最近同步首次备份':'首次备份'});
+          if(Number(n.subject_type) === 2) episodeStateRefreshIds.add(id);
+          added++; syncResultIds.added.add(id); state.history.push({subject_id:n.subject_id, change_type:'added', old:null, new:structuredClone(state.collections[id]), created_at:started_at, sync_run_id:runId, note:mode==='recent'?'最近同步首次备份':'首次备份'});
         }
         else{
           // Collection list responses are intentionally compact. Carry over the
@@ -9713,9 +10145,23 @@ html.electron-exact-effect{--bv-top-off:calc(var(--topbar-h) + 46px)}
             n.public_tags_source = old.public_tags_source || n.public_tags_source || 'api';
             n.content_hash = hashString(stableStringify(comparable(n)));
           }
-          if(old.status === 'missing_candidate' || old.status === 'protected_local' || old.status === 'confirmed_deleted'){ restored++; state.history.push({subject_id:n.subject_id, change_type:'restored', old:structuredClone(old), new:structuredClone(n), changes:collectionFieldDiff(old, n), created_at:started_at, sync_run_id:runId, note:'远端重新出现'}); }
-          if(old.content_hash !== n.content_hash){ const changes = collectionFieldDiff(old, n); modified++; state.history.push({subject_id:n.subject_id, change_type:'modified', old:structuredClone(old), new:structuredClone(n), changes, created_at:started_at, sync_run_id:runId, note:'收藏字段、吐槽、标签、评分、进度或条目资料变化'}); }
+          if(old.status === 'missing_candidate' || old.status === 'protected_local' || old.status === 'confirmed_deleted'){
+            const changes = collectionFieldDiff(old, n);
+            restored++; syncResultIds.restored.add(id);
+            if(changes.length) collectionChanges.set(id, changes);
+            state.history.push({subject_id:n.subject_id, change_type:'restored', old:structuredClone(old), new:structuredClone(n), changes, created_at:started_at, sync_run_id:runId, note:'远端重新出现'});
+          }
+          if(old.content_hash !== n.content_hash){
+            const changes = collectionFieldDiff(old, n);
+            modified++; syncResultIds.modified.add(id);
+            if(changes.length) collectionChanges.set(id, changes);
+            state.history.push({subject_id:n.subject_id, change_type:'modified', old:structuredClone(old), new:structuredClone(n), changes, created_at:started_at, sync_run_id:runId, note:'收藏字段、吐槽、标签、评分、进度或条目资料变化'});
+          }
           const statusChanged = old.collection_type !== n.collection_type;
+          if(Number(n.subject_type) === 2 && (
+            !valuesSame(completedEpisodesCount(old), completedEpisodesCount(n))
+            || statusChanged
+          )) episodeStateRefreshIds.add(id);
           const markChangedAt = statusChanged ? (n.bangumi_updated_at || started_at) : (old.mark_changed_at || n.bangumi_updated_at || old.collection_created_at || '');
           state.collections[id] = {...old, ...n, status:'active', mark_changed_at:markChangedAt, mark_changed_source:statusChanged ? 'status_change' : (old.mark_changed_source || 'legacy'), first_seen_at:old.first_seen_at || started_at, last_seen_at:started_at, last_synced_at:started_at, missing_count:0, last_sync_run_id:runId};
         }
@@ -9724,7 +10170,7 @@ html.electron-exact-effect{--bv-top-off:calc(var(--topbar-h) + 46px)}
         for(const c of getAllCollections()){
           const id=String(c.subject_id); if(seen.has(id)) continue; if(c.status==='confirmed_deleted'||c.status==='protected_local') continue;
           if(c.status !== 'missing_candidate'){ state.history.push({subject_id:c.subject_id, change_type:'missing', old:structuredClone(c), new:null, created_at:started_at, sync_run_id:runId, note:'远端完整同步后未出现；未删除，仅进入安全箱'}); }
-          c.status='missing_candidate'; c.missing_count=(c.missing_count||0)+1; c.last_sync_run_id=runId; missing++;
+          c.status='missing_candidate'; c.missing_count=(c.missing_count||0)+1; c.last_sync_run_id=runId; missing++; syncResultIds.missing.add(id);
         }
       } else {
         log('syncLog','最近同步不会判断远端删除，也不会把任何条目放进安全箱；需要核对消失条目时请点“完整同步”。');
@@ -9737,6 +10183,14 @@ html.electron-exact-effect{--bv-top-off:calc(var(--topbar-h) + 46px)}
       await saveState();
       setProgress(70);
       log('syncLog',`收藏核对已保存：新增 ${added}，修改 ${modified}，恢复 ${restored}，疑似消失 ${missing}。后续条目资料可安全断点续补。`);
+      let timelineSync = null;
+      if(mode === 'full'){
+        log('syncLog','开始更新时间胶囊：首次同步会完整读取，已有缓存只读取新增事件。');
+        timelineSync = await readAllTimeCapsules({automatic:true, task});
+        if(timelineSync?.affectedSubjectIds) timelineSync.affectedSubjectIds.forEach(id=>episodeStateRefreshIds.add(String(id)));
+        if(timelineSync && !timelineSync.ok && timelineSync.reason !== 'local-api-unavailable') log('syncLog','时间胶囊更新未完成：'+(timelineSync.error || timelineSync.reason || '未知原因'),'warn');
+        throwIfTaskCancelled(task);
+      }
 
       const detailCandidates = mode === 'full'
         ? getAllCollections().filter(row => row.status !== 'confirmed_deleted' && row.status !== 'missing_candidate')
@@ -9746,7 +10200,13 @@ html.electron-exact-effect{--bv-top-off:calc(var(--topbar-h) + 46px)}
           && Number(row.subject_detail_missing_auth_revision) === SUBJECT_LOOKUP_AUTH_REVISION;
         return !row.subject_detail_fetched_at && !knownMissing;
       });
-      const needsEpisodeCatalog = detailCandidates.filter(row => Number(row.subject_type) === 2 && !hasEpisodeCatalog(row) && !row.episode_catalog_missing_at);
+      const timelineCatalogForceIds = new Set(detailCandidates
+        .filter(row => timelineCatalogNeedsRefreshForCollection(row, new Set(timelineSync?.affectedSubjectIds || [])))
+        .map(row => String(row.subject_id || '')));
+      const needsEpisodeCatalog = detailCandidates.filter(row => Number(row.subject_type) === 2
+        // Collection progress changes only require a fresh status snapshot.
+        // The catalogue itself is refreshed from the count/TTL plan below.
+        && (episodeCatalogNeedsRefresh(row, false) || timelineCatalogForceIds.has(String(row.subject_id || ''))));
       const detailPhaseEnd = needsEpisodeCatalog.length ? 85 : 100;
       run.details_total = needsSubjectInfo.length;
       run.episode_catalog_total = needsEpisodeCatalog.length;
@@ -9782,14 +10242,28 @@ html.electron-exact-effect{--bv-top-off:calc(var(--topbar-h) + 46px)}
       if(needsEpisodeCatalog.length){
         const catalogStart = needsSubjectInfo.length ? 85 : 70;
         if($('syncTitle')) $('syncTitle').textContent = mode === 'full' ? '完整同步：缓存 Bangumi 动画章节' : '同步最近：缓存 Bangumi 动画章节';
-        if($('syncHelp')) $('syncHelp').textContent = `章节表提供 Bangumi 实际集号、SP 等信息；每个动画条目使用一次官方 API 请求，保持至少 ${Math.round(API_REQUEST_INTERVAL_MS/1000*100)/100} 秒间隔，并写入本地条目资料。`;
-        log('syncLog',`Bangumi 章节表：${needsEpisodeCatalog.length} 个动画条目待缓存，用于准确显示续作集号与匹配时间胶囊。`);
+        if($('syncHelp')) $('syncHelp').textContent = `章节表只在集数变化时增量补尾部；集数未变不会因长时间未同步重复下载，缓存异常时才完整刷新，保持至少 ${Math.round(API_REQUEST_INTERVAL_MS/1000*100)/100} 秒间隔。`;
+        log('syncLog',`Bangumi 章节表：${needsEpisodeCatalog.length} 个动画条目需要检查；新增章节只读取尾部，集数未变会跳过。`);
         setProgress(catalogStart);
+        let catalogIncremental = 0;
+        let catalogFull = 0;
         for(let i=0;i<needsEpisodeCatalog.length;i++){
           throwIfTaskCancelled(task);
           const row = needsEpisodeCatalog[i];
           try{
-            await fetchEpisodeCatalog(row, token || '');
+            const beforeCatalog = normalizeEpisodeCatalog(row.episode_catalog || []);
+            const refresh = await refreshEpisodeCatalog(row, token || '', {force:timelineCatalogForceIds.has(String(row.subject_id || ''))});
+            const subjectId = String(row.subject_id || '');
+            if(refresh.mode === 'incremental'){ catalogIncremental++; if(subjectId) episodeCatalogIncrementalIds.add(subjectId); }
+            if(refresh.mode === 'full'){ catalogFull++; if(subjectId) episodeCatalogFullIds.add(subjectId); }
+            const afterCatalog = normalizeEpisodeCatalog(refresh.catalog || row.episode_catalog || []);
+            if(subjectId && (refresh.mode === 'incremental' || refresh.mode === 'full')){
+              episodeCatalogChanges.set(subjectId, {
+                mode:refresh.mode,
+                reason:refresh.reason || '',
+                ...episodeCatalogChangeSummary(beforeCatalog, afterCatalog)
+              });
+            }
           }catch(e){
             if(/\bHTTP 404\b/.test(String(e?.message || e))) row.episode_catalog_missing_at = nowISO();
             if(i < 8) log('syncLog',`章节表缓存失败 ${row.subject_id}：${e.message || e}`);
@@ -9803,11 +10277,64 @@ html.electron-exact-effect{--bv-top-off:calc(var(--topbar-h) + 46px)}
           }
           await sleep(35);
         }
-        await matchTimelineEpisodesToCollections();
+        log('syncLog',`章节表检查完成：增量 ${catalogIncremental}，完整刷新 ${catalogFull}，未产生重复请求的条目会跳过。`);
       }
+      const baselineNeeded = mode === 'full' && Number(state.settings.episodeStatusBaselineVersion || 0) < EPISODE_STATUS_BASELINE_VERSION;
+      if(baselineNeeded){
+        log('syncLog','首次完整同步：建立逐集状态基线；本阶段可能较慢，但完成后后续同步只处理变化条目。');
+      }
+      const episodeStateRefresh = await refreshEpisodeStateAfterCollectionSync(
+        detailCandidates,
+        episodeStateRefreshIds,
+        token || '',
+        task,
+        // A complete sync is the point where old per-episode snapshots are
+        // reconciled with Bangumi again. Remote updated_at values keep an
+        // immediate second sync from repeating unchanged status requests.
+        {
+          refreshCatalog:false,
+          refreshStaleStatuses:mode === 'full',
+          baselineStatuses:baselineNeeded,
+          onProgress:({inspected, total, statusRefreshed, statusDeferred, errors})=>{
+            log('syncLog',`逐集状态检查：${inspected}/${total}，已刷新 ${statusRefreshed}，按需延后 ${statusDeferred}${errors ? `，失败 ${errors}` : ''}`);
+          }
+        }
+      );
+      if(episodeStateRefresh.catalogRefreshed || episodeStateRefresh.statusRefreshed){
+        await saveState();
+      }
+      if(episodeStateRefresh.errors.length){
+        log('syncLog', `逐集状态刷新失败 ${episodeStateRefresh.errors.length} 个条目；下次同步或打开详情时会重试。`, 'warn');
+      }
+      if(episodeStateRefresh.statusDeferred){
+        log('syncLog', `已跳过 ${episodeStateRefresh.statusDeferred} 个未建立逐集快照的条目；打开详情页时会按需读取。`);
+      }
+      if(baselineNeeded && !episodeStateRefresh.errors.length && !episodeStateRefresh.statusDeferred){
+        state.settings.episodeStatusBaselineVersion = EPISODE_STATUS_BASELINE_VERSION;
+        await saveState({history:false});
+        log('syncLog','首次逐集状态基线已完成；后续同步只更新发生变化的条目。');
+      }else if(baselineNeeded){
+        log('syncLog','首次逐集状态基线尚未完成；下次完整同步会继续补齐未成功的条目。','warn');
+      }
+      // Matching is independent of catalog downloads. Existing catalogs can
+      // still receive new timeline events during a complete sync.
+      await matchTimelineEpisodesToCollections();
       run.details_pending = false;
       run.finished_at = nowISO();
-      await saveState(); setProgress(100); resetRenderLimit(); log('syncLog',`完成：新增 ${added}，修改 ${modified}，恢复 ${restored}，疑似消失 ${missing}；条目资料 ${run.details_completed}/${run.details_total}`); render(); toast(mode === 'recent' ? '最近同步完成' : '完整同步完成');
+      await saveState(); setProgress(100); resetRenderLimit(); log('syncLog',`完成：新增 ${added}，修改 ${modified}，恢复 ${restored}，疑似消失 ${missing}；条目资料 ${run.details_completed}/${run.details_total}`);
+      renderSyncResultPanel({
+        addedIds:syncResultIds.added,
+        modifiedIds:syncResultIds.modified,
+        restoredIds:syncResultIds.restored,
+        missingIds:syncResultIds.missing,
+        collectionChanges,
+        episodeCatalogIncrementalIds,
+        episodeCatalogFullIds,
+        episodeCatalogChanges,
+        statusRefreshedIds:episodeStateRefresh.statusRefreshedIds,
+        statusErrorIds:episodeStateRefresh.statusErrorIds
+      });
+      render(); toast(mode === 'recent' ? '最近同步完成' : '完整同步完成');
     }catch(e){
       if(taskWasCancelled(task) || e?.name === 'AbortError'){
         if(activeRun){ activeRun.details_pending = true; activeRun.finished_at = nowISO(); try{ await saveState(); }catch{} }
@@ -15961,12 +16488,15 @@ html.electron-exact-effect{--bv-top-off:calc(var(--topbar-h) + 46px)}
       return __bv312RenderCards.apply(this, arguments);
     };
     const episodeDrawerHydrationPending = new Map();
-    const EPISODE_COLLECTION_STATUS_TTL_MS = 90 * 1000;
+    // Keep detail hydration on the same rule as complete sync so unchanged
+    // aggregate counts cannot hide per-episode changes.
     function episodeCollectionStatusNeedsRefresh(row){
       const fetchedAt = Date.parse(String(row?.episode_collection_fetched_at || ''));
-      return Number(row?.episode_collection_status_schema || 0) < EPISODE_COLLECTION_STATUS_SCHEMA
-        || !Number.isFinite(fetchedAt)
-        || Date.now() - fetchedAt >= EPISODE_COLLECTION_STATUS_TTL_MS;
+      if(Number(row?.episode_collection_status_schema || 0) < EPISODE_COLLECTION_STATUS_SCHEMA
+        || !Number.isFinite(fetchedAt)) return true;
+      const remoteUpdatedAt = Date.parse(String(row?.bangumi_updated_at || ''));
+      if(Number.isFinite(remoteUpdatedAt)) return remoteUpdatedAt > fetchedAt;
+      return Date.now() - fetchedAt >= BV_EPISODE_COLLECTION_STATUS_TTL_MS;
     }
     function refreshOpenDrawerEpisodePanels(key, row){
       const drawer = $('drawer');
@@ -16155,7 +16685,8 @@ html.electron-exact-effect{--bv-top-off:calc(var(--topbar-h) + 46px)}
       .ep-cell-v9.watched{background:linear-gradient(135deg,var(--a),var(--b))!important;color:#fff!important;box-shadow:0 0 11px color-mix(in srgb,var(--a) 30%,transparent)!important}
       .ep-cell-v9:hover{transform:translateY(-1px) scale(1.08)!important;z-index:2}
       .ep-cell-v9.state-wish{background:linear-gradient(135deg,color-mix(in srgb,var(--c) 84%,white),var(--c))!important;color:#fff!important;box-shadow:0 0 12px color-mix(in srgb,var(--c) 36%,transparent)!important}
-      .ep-cell-v9.state-abandoned{background:linear-gradient(135deg,#ff8a8a,#ef5e78)!important;color:#fff!important;box-shadow:0 0 12px rgba(239,94,120,.3)!important}
+      /* 抛弃是终止/非活动状态，用中性深灰区别于想看的粉色和已看的渐变色。 */
+      .ep-cell-v9.state-abandoned{background:linear-gradient(135deg,#737985,#4d535e)!important;color:#fff!important;box-shadow:0 0 10px rgba(55,61,72,.28)!important}
       .ep-cell-v9.state-cleared{background:transparent!important;color:var(--muted)!important;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--muted) 74%,transparent)!important}
       @media (max-width:980px){.episode-grid-v9,.episode-grid-v9.too-many,.episode-strip-v9.compact .episode-grid-v9{grid-template-columns:repeat(var(--ep-cols-mobile,18),25px)!important}.ep-cell-v9,.episode-grid-v9.too-many .ep-cell-v9,.episode-strip-v9.compact .ep-cell-v9{width:25px!important;min-width:25px!important}}
       @media (max-width:720px){.episode-grid-v9,.episode-grid-v9.too-many,.episode-strip-v9.compact .episode-grid-v9{grid-template-columns:repeat(var(--ep-cols-narrow,12),24px)!important;gap:3px!important;padding:9px 10px!important}.ep-cell-v9,.episode-grid-v9.too-many .ep-cell-v9,.episode-strip-v9.compact .ep-cell-v9{width:24px!important;min-width:24px!important;height:19px!important}}
@@ -16192,7 +16723,7 @@ html.electron-exact-effect{--bv-top-off:calc(var(--topbar-h) + 46px)}
       [data-theme="light"] .episode-special-chip.is-unwatched{background:rgba(54,43,77,.08);border-color:rgba(54,43,77,.16)}[data-theme="light"] .episode-special-chip.is-unwatched b{color:rgba(54,43,77,.76)}
       .episode-special-chip.state-watched{border-color:color-mix(in srgb,var(--a) 52%,var(--line));background:color-mix(in srgb,var(--a) 20%,rgba(255,255,255,.10))}.episode-special-chip.state-watched small{color:color-mix(in srgb,var(--a) 72%,var(--text))}
       .episode-special-chip.state-wish{border-color:color-mix(in srgb,var(--c) 54%,var(--line));background:color-mix(in srgb,var(--c) 18%,rgba(255,255,255,.10))}.episode-special-chip.state-wish small{color:color-mix(in srgb,var(--c) 78%,var(--text))}
-      .episode-special-chip.state-abandoned{border-color:rgba(239,94,120,.58);background:rgba(239,94,120,.16)}.episode-special-chip.state-abandoned small{color:#d94b68}
+      .episode-special-chip.state-abandoned{border-color:rgba(92,99,112,.62);background:rgba(92,99,112,.18)}.episode-special-chip.state-abandoned small{color:#68707d}
       .episode-special-chip.state-cleared{opacity:.72;border-style:dashed}
       .episode-special-chip:hover{transform:translateY(-1px);border-color:color-mix(in srgb,var(--a) 58%,var(--line))}
       @media (max-width:980px){.episode-specials-v9{width:var(--episode-special-width-mobile,var(--episode-special-width,760px))}}
@@ -19411,8 +19942,8 @@ html.electron-exact-effect{--bv-top-off:calc(var(--topbar-h) + 46px)}
 
   /* ---- 玻璃折射能力检测：不支持时自动降级为纯模糊玻璃 ---- */
   try {
-    /* 部分 Chromium 运行时会把含 url() 的 backdrop-filter 整条丢弃导致玻璃失去模糊；
-       仅在支持该语法的运行时启用折射透镜，其余环境回退为纯模糊玻璃。 */
+    /* Chromium 138（Electron 37）会把含 url() 的 backdrop-filter 整条丢弃导致玻璃失去模糊；
+       仅在 Chromium ≥ 141 或非 Chromium 内核上启用折射透镜，其余环境回退为纯模糊玻璃。 */
     const chromeMajor = Number((navigator.userAgent.match(/Chrom(?:e|ium)\/(\d+)/) || [])[1] || 0);
     const lensSyntaxOk = CSS.supports('backdrop-filter', 'url(#bvLens)') || CSS.supports('-webkit-backdrop-filter', 'url(#bvLens)');
     if (lensSyntaxOk && (chromeMajor === 0 || chromeMajor >= 141)) root.classList.add('bv-lens');

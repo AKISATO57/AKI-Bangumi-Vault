@@ -117,7 +117,7 @@ foreach ($TargetPath in @($OutputPath, $ChecksumPath)) {
 New-Item -ItemType Directory -Force -Path $OutputDirectory | Out-Null
 [System.IO.File]::Delete($ChecksumPath)
 
-$RequiredEntries = @("package.json", "main.js", "preload.js", "app/BangumiVault.html", "README.md", "LICENSE", "docs/RELEASE_NOTES_v1.0.0.md")
+$RequiredEntries = @("package.json", "main.js", "preload.js", "app/BangumiVault.html", "LICENSE")
 $FileStream = [System.IO.File]::Open($OutputPath, [System.IO.FileMode]::Create, [System.IO.FileAccess]::ReadWrite, [System.IO.FileShare]::None)
 try {
   $Archive = [System.IO.Compression.ZipArchive]::new($FileStream, [System.IO.Compression.ZipArchiveMode]::Create, $false, [System.Text.Encoding]::UTF8)
@@ -160,14 +160,7 @@ try {
   $Verification.Dispose()
 }
 
-$HashAlgorithm = [System.Security.Cryptography.SHA256]::Create()
-$HashStream = [System.IO.File]::OpenRead($OutputPath)
-try {
-  $Hash = [BitConverter]::ToString($HashAlgorithm.ComputeHash($HashStream)).Replace('-', '').ToLowerInvariant()
-} finally {
-  $HashStream.Dispose()
-  $HashAlgorithm.Dispose()
-}
+$Hash = (Get-FileHash -LiteralPath $OutputPath -Algorithm SHA256).Hash.ToLowerInvariant()
 $ChecksumLine = "$Hash  $([System.IO.Path]::GetFileName($OutputPath))"
 [System.IO.File]::WriteAllText($ChecksumPath, "$ChecksumLine`r`n", [System.Text.UTF8Encoding]::new($false))
 if ((Get-Content -LiteralPath $ChecksumPath -Raw -Encoding UTF8).Trim() -ne $ChecksumLine) {

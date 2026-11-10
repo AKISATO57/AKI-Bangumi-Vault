@@ -13,7 +13,6 @@ Install-Desktop-Dependencies.cmd
 Install-Electron-Runtime.ps1
 LICENSE
 NOTICE
-README.md
 Open-Data-Folder.cmd
 Open-HTML-Only.cmd
 Repair-Electron-Install.cmd
@@ -27,11 +26,11 @@ build/icon.png
 build/icon.svg
 build/installer.nsh
 docs/1.0.0更新日志.txt
+docs/1.1.0更新日志.txt
 docs/BANGUMI_REQUEST_POLICY.md
 docs/GITHUB_PUBLISH.md
 docs/ONLINE_VERSION.md
 docs/RELEASE_WINDOWS.md
-docs/RELEASE_NOTES_v1.0.0.md
 lib/startup-sequence.js
 lib/window-state.js
 main.js

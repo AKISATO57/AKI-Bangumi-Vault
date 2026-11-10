@@ -24,7 +24,7 @@ const WINDOW_STATE_FILE_NAME = '窗口状态.json';
 const BLOGS_FILE_NAME = '用户日志.json';
 const INDICES_FILE_NAME = '目录数据.json';
 const INDEX_ITEMS_FILE_NAME = '目录条目.json';
-const APP_USER_AGENT = 'AKISATO57/AKI-Bangumi-Vault/1.0.0 (https://github.com/AKISATO57/AKI-Bangumi-Vault)';
+const APP_USER_AGENT = 'AKISATO57/AKI-Bangumi-Vault/1.1.0 (https://github.com/AKISATO57/AKI-Bangumi-Vault)';
 const IMAGE_ACCEPT = 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8';
 const MAX_CACHED_COVER_EDGE = 4096;
 const CACHED_COVER_JPEG_QUALITY = 95;
